@@ -10,7 +10,7 @@ const HomeProducts = () => {
     <div className="flex flex-col items-center pt-14">
       <div className="flex flex-col items-center">
         <p className="text-3xl font-medium">
-          Featured <span className="text-orange-600">Products</span>
+          All <span className="text-orange-600">Products</span>
         </p>
         <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
       </div>

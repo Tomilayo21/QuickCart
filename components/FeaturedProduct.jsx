@@ -30,7 +30,10 @@ const FeaturedProduct = () => {
     <div className="flex flex-col items-center">
       {/* Product Details */}
       {productData && (
-        <div className="w-full max-w-4xl p-4 mt-10">
+        <div
+          className="w-full max-w-4xl mt-10"
+          style={{ backgroundColor: "rgba(230, 233, 242, 0.6)", padding: "1.5rem", borderRadius: "0.375rem" }} // p-6 and rounded-md
+        >
           <h1 className="text-2xl font-semibold mb-4">{productData.name}</h1>
           {mainImage && (
             <img
@@ -75,7 +78,7 @@ const FeaturedProduct = () => {
                   alt={product.name}
                   className="w-full h-auto object-cover group-hover:brightness-75 transition duration-300 rounded"
                 />
-                <div className="group-hover:-translate-y-4 transition duration-300 absolute bottom-8 left-4 text-black space-y-2">
+                <div className="group-hover:-translate-y-4 transition duration-300 absolute bottom-8 left-4 text-green space-y-2">
                   <p className="font-medium text-xl lg:text-2xl">{product.name}</p>
                   <p className="text-sm lg:text-base leading-5 max-w-60 line-clamp-2">
                     {product.description}

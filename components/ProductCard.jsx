@@ -272,7 +272,7 @@ const ProductCard = ({ product }) => {
         </p>
         <button
           onClick={handleAddToCart}
-          className="max-sm:hidden px-4 py-1.5 text-gray-500 border border-gray-500/20 rounded-full text-xs hover:bg-slate-50 transition"
+          className="px-3 py-1 text-[10px] sm:text-xs text-gray-500 border border-gray-500/20 rounded-full hover:bg-slate-50 transition w-fit"
         >
           Add to Cart
         </button>

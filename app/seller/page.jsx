@@ -1,13 +1,28 @@
-'use client'
+'use client';
+
 import React, { useState, useEffect } from "react";
 import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAppContext } from "@/context/AppContext";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const AddProduct = () => {
-  const { getToken } = useAppContext();
+  const { getToken, isSeller, user } = useAppContext();
+  const router = useRouter();
+
+  // Redirect non-sellers or unauthenticated users immediately on mount
+  useEffect(() => {
+    if (!user || !isSeller) {
+      router.replace("/"); // redirect to home or any page you want
+    }
+  }, [user, isSeller, router]);
+
+  // Optionally, you can show a loading or empty state while redirecting
+  if (!user || !isSeller) {
+    return <p>Redirecting...</p>;
+  }
 
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
@@ -18,7 +33,6 @@ const AddProduct = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadDone, setUploadDone] = useState(false);
 
-  // Hide "Done!" after 3 seconds
   useEffect(() => {
     if (uploadDone) {
       const timer = setTimeout(() => setUploadDone(false), 5000);

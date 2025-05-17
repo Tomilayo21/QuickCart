@@ -62,7 +62,8 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div className="px-6 md:px-16 lg:px-32">
+      <div className="px-6 md:px-16 lg:px-32 mt-16">
+
         <HeaderSlider />
         <HomeProducts />
         <FeaturedProduct />

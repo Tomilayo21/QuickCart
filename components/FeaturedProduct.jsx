@@ -41,7 +41,7 @@ const FeaturedProduct = () => {
           )}
           <p className="mt-4 text-gray-600">{productData.description}</p>
           <p className="mt-2 text-lg font-semibold text-orange-600">
-            ${productData.offerPrice}
+            ${productData.price}
           </p>
           <button
             onClick={() => addToCart(productData._id)}
@@ -84,7 +84,7 @@ const FeaturedProduct = () => {
                     onClick={() => router.push(`/product/${product._id}`)}
                     className="flex items-center gap-1.5 bg-orange-600 px-4 py-2 rounded text-white"
                   >
-                    Buy now
+                    Add to Cart
                     <img
                       alt="Redirect Icon"
                       width={12}

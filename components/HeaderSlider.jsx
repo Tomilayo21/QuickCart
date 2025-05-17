@@ -8,7 +8,7 @@ const HeaderSlider = () => {
       id: 1,
       title: "Experience Pure Sound - Your Perfect Headphones Awaits!",
       offer: "Limited Time Offer 30% Off",
-      buttonText1: "Buy now",
+      buttonText1: "",
       buttonText2: "Find more",
       imgSrc: assets.header_headphone_image,
     },

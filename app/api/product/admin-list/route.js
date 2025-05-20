@@ -9,9 +9,9 @@ export async function GET(request) {
     try {
         const { userId } = getAuth(request)
 
-        const isSeller = authSeller(userId)
+        const isAdmin = authSeller(userId)
 
-        if (!isSeller) {
+        if (!isAdmin) {
             return NextResponse.json({ success : false, message : "Not Authorized!" });
         }
 

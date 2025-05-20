@@ -21,9 +21,9 @@ export async function POST(request) {
     try {
         const  { userId } = getAuth(request)
 
-        const isSeller = await authSeller(userId)
+        const isAdmin = await authSeller(userId)
 
-        if (!isSeller) {
+        if (!isAdmin) {
             return NextResponse.json({ success: false, message: 'not authorized' })
         }
 
@@ -32,6 +32,8 @@ export async function POST(request) {
         const name = formData.get('name');
         const description = formData.get('description');
         const category = formData.get('category');
+        const color = formData.get('color');
+        const brand = formData.get('brand');
         const price = formData.get('price');
         const offerPrice = formData.get('offerPrice');
 
@@ -72,7 +74,9 @@ export async function POST(request) {
         category,
         price : Number(price),
         offerPrice : Number(offerPrice),
+        color,
         image,
+        brand,
         date: Date.now()
         })
 

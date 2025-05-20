@@ -21,7 +21,7 @@ export const AppContextProvider = (props) => {
 
     const [products, setProducts] = useState([]);
     const [userData, setUserData] = useState(false);
-    const [isSeller, setIsSeller] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [cartItems, setCartItems] = useState({}); // Start cart from 0 (empty object)
 
     const fetchProductData = async () => {
@@ -39,8 +39,8 @@ export const AppContextProvider = (props) => {
 
     const fetchUserData = async () => {
         try {
-            if (user?.publicMetadata?.role === 'seller') {
-                setIsSeller(true);
+            if (user?.publicMetadata?.role === 'admin') {
+                setIsAdmin(true);
             }
 
             const token = await getToken();
@@ -148,8 +148,8 @@ export const AppContextProvider = (props) => {
         getToken,
         currency,
         router,
-        isSeller,
-        setIsSeller,
+        isAdmin,
+        setIsAdmin,
         userData,
         fetchUserData,
         products,

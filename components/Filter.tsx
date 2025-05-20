@@ -4,9 +4,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 interface FilterProps {
   searchQuery: string;
+  brand?: string;
+  color?: string;
 }
 
-const Filter = ({ searchQuery }: FilterProps) => {
+const Filter = ({ searchQuery, brand, color }: FilterProps) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -38,15 +40,16 @@ const Filter = ({ searchQuery }: FilterProps) => {
     <div className="mt-12 flex flex-col md:flex-row md:items-center gap-4">
       {/* Filter Controls */}
       <div className="flex flex-wrap gap-4">
-        <select
+        {/* <select
           name="type"
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
           onChange={handleFilterChange}
+          defaultValue={searchParams.get("type") || ""}
         >
           <option value="">Type</option>
           <option value="physical">Physical</option>
           <option value="digital">Digital</option>
-        </select>
+        </select> */}
 
         <input
           type="number"
@@ -54,6 +57,7 @@ const Filter = ({ searchQuery }: FilterProps) => {
           placeholder="Min price"
           className="text-xs rounded-2xl px-4 py-2 w-24 ring-1 ring-gray-300 placeholder:text-gray-400"
           onChange={handleFilterChange}
+          defaultValue={searchParams.get("min") || ""}
         />
         <input
           type="number"
@@ -61,12 +65,14 @@ const Filter = ({ searchQuery }: FilterProps) => {
           placeholder="Max price"
           className="text-xs rounded-2xl px-4 py-2 w-24 ring-1 ring-gray-300 placeholder:text-gray-400"
           onChange={handleFilterChange}
+          defaultValue={searchParams.get("max") || ""}
         />
 
         <select
           name="category"
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
           onChange={handleFilterChange}
+          defaultValue={searchParams.get("category") || ""}
         >
           <option value="">Category</option>
           <option value="Earphone">Earphone</option>
@@ -77,6 +83,40 @@ const Filter = ({ searchQuery }: FilterProps) => {
           <option value="Camera">Camera</option>
           <option value="Accessories">Accessories</option>
         </select>
+
+        {/* New Brand Filter */}
+        <select
+          name="brand"
+          className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
+          onChange={handleFilterChange}
+          defaultValue={brand || searchParams.get("brand") || ""}
+        >
+          <option value="">Brand</option>
+          <option value="Apple">Apple</option>
+          <option value="Samsung">Samsung</option>
+          <option value="Sony">Sony</option>
+          <option value="Bose">Bose</option>
+          <option value="Beats">Beats</option>
+          <option value="Dell">Dell</option>
+          {/* Add more brands as needed */}
+        </select>
+
+        {/* New Color Filter */}
+        <select
+          name="color"
+          className="py-2 px-4 rounded-2xl text-xs font-medium bg-[#EBEDED]"
+          onChange={handleFilterChange}
+          defaultValue={color || searchParams.get("color") || ""}
+        >
+          <option value="">Color</option>
+          <option value="Black">Black</option>
+          <option value="White">White</option>
+          <option value="Red">Red</option>
+          <option value="Blue">Blue</option>
+          <option value="Green">Green</option>
+          <option value="Silver">Silver</option>
+          {/* Add more colors as needed */}
+        </select>
       </div>
 
       {/* Sort Control */}
@@ -85,6 +125,7 @@ const Filter = ({ searchQuery }: FilterProps) => {
           name="sort"
           className="py-2 px-4 rounded-2xl text-xs font-medium bg-white ring-1 ring-gray-300"
           onChange={handleFilterChange}
+          defaultValue={searchParams.get("sort") || ""}
         >
           <option value="">Sort By</option>
           <option value="asc price">Price (low to high)</option>

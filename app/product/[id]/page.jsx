@@ -299,11 +299,11 @@ const Product = () => {
                                 <tbody>
                                     <tr>
                                         <td className="text-gray-600 font-medium">Brand</td>
-                                        <td className="text-gray-800/50 ">Generic</td>
+                                        <td className="text-gray-800/50 ">{productData.brand}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-gray-600 font-medium">Color</td>
-                                        <td className="text-gray-800/50 ">Multi</td>
+                                        <td className="text-gray-800/50 ">{productData.color}</td>
                                     </tr>
                                     <tr>
                                         <td className="text-gray-600 font-medium">Category</td>

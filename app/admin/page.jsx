@@ -9,18 +9,18 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 const AddProduct = () => {
-  const { getToken, isSeller, user } = useAppContext();
+  const { getToken, isAdmin, user } = useAppContext();
   const router = useRouter();
 
-  // Redirect non-sellers or unauthenticated users immediately on mount
+  // Redirect non-admins or unauthenticated users immediately on mount
   useEffect(() => {
-    if (!user || !isSeller) {
+    if (!user || !isAdmin) {
       router.replace("/"); // redirect to home or any page you want
     }
-  }, [user, isSeller, router]);
+  }, [user, isAdmin, router]);
 
   // Optionally, you can show a loading or empty state while redirecting
-  if (!user || !isSeller) {
+  if (!user || !isAdmin) {
     return <p>Redirecting...</p>;
   }
 
@@ -32,6 +32,8 @@ const AddProduct = () => {
   const [offerPrice, setOfferPrice] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadDone, setUploadDone] = useState(false);
+  const [color, setColor] = useState('');
+  const [brand, setBrand] = useState('');
 
   useEffect(() => {
     if (uploadDone) {
@@ -53,6 +55,8 @@ const AddProduct = () => {
     formData.append('category', category);
     formData.append('price', price);
     formData.append('offerPrice', offerPrice);
+    formData.append('color', color);
+    formData.append('brand', brand);
 
     for (let i = 0; i < files.length; i++) {
       if (files[i]) formData.append('images', files[i]);
@@ -70,6 +74,8 @@ const AddProduct = () => {
       setName('');
       setDescription('');
       setCategory('Earphone');
+      setColor('');
+      setBrand('');
       setPrice('');
       setOfferPrice('');
       setUploadDone(true);
@@ -159,6 +165,33 @@ const AddProduct = () => {
               <option value="Accessories">Accessories</option>
             </select>
           </div>
+
+          <div className="flex flex-col gap-1 w-32">
+            <label className="text-base font-medium" htmlFor="color">Color</label>
+            <input
+              id="color"
+              type="text"
+              placeholder="Color"
+              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              onChange={(e) => setColor(e.target.value)}
+              value={color}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-1 w-32">
+            <label className="text-base font-medium" htmlFor="brand">Brand</label>
+            <input
+              id="brand"
+              type="text"
+              placeholder="Brand"
+              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-500/40"
+              onChange={(e) => setBrand(e.target.value)}
+              value={brand}
+              required
+            />
+          </div>
+
 
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium" htmlFor="product-price">Original Price</label>

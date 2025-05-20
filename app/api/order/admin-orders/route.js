@@ -11,10 +11,10 @@ export async function GET(request) {
         
         const { userId } = getAuth(request)
 
-        const isSeller = await authSeller(userId)
+        const isAdmin = await authSeller(userId)
 
-        if (!isSeller) {
-            return NextResponse.json({ success : false, message : 'You are not authorized to carry out this function. Kindly login as a Seller' })
+        if (!isAdmin) {
+            return NextResponse.json({ success : false, message : 'You are not authorized to carry out this function. Kindly login as a Admin' })
         } 
 
         await connectDB()

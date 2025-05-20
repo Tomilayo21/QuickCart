@@ -498,7 +498,7 @@ const Navbar = () => {
           )}
 
           {user ? (
-            <UserButton appearance={{ elements: { avatarBox: "w-5 h-5" } }} afterSignOutUrl="/" />
+            <UserButton appearance={{ elements: { avatarBox: "w-5 h-5" } }} afterSignOutUrl="/" About/> 
           ) : (
             <button
               onClick={() => {
@@ -506,7 +506,7 @@ const Navbar = () => {
                 setMobileMenuOpen(false);
               }}
               className="flex items-center gap-2 text-gray-700 hover:bg-[#EBEDED] rounded px-2 py-1"
-            >
+            > 
               <Image className="w-4 h-4" src={assets.user_icon} alt="user icon" />
               Sign In
             </button>

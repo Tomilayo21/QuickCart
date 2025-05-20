@@ -168,7 +168,7 @@ const AddProduct = () => {
 
           <div className="flex flex-col gap-1 w-32">
             <label className="text-base font-medium" htmlFor="color">Color</label>
-            <input
+            <select
               id="color"
               type="text"
               placeholder="Color"
@@ -176,7 +176,16 @@ const AddProduct = () => {
               onChange={(e) => setColor(e.target.value)}
               value={color}
               required
-            />
+            >
+              {/* <option value="">Color</option> */}
+              <option value="Black">Black</option>
+              <option value="White">White</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Green">Green</option>
+              <option value="Silver">Silver</option>
+              {/* Add more colors as needed */}
+            </select>
           </div>
 
           <div className="flex flex-col gap-1 w-32">

@@ -108,7 +108,7 @@ const Filter = ({ searchQuery, brand, color }: FilterProps) => {
           onChange={handleFilterChange}
           defaultValue={color || searchParams.get("color") || ""}
         >
-          <option value="">Color</option>
+          {/* <option value="">Color</option> */}
           <option value="Black">Black</option>
           <option value="White">White</option>
           <option value="Red">Red</option>

@@ -4,6 +4,8 @@ import { getAuth } from "@clerk/nextjs/server";
 import authSeller from "@/lib/authSeller";
 import { NextResponse } from "next/server";
 
+
+
 export async function POST(request) {
   try {
     const { userId } = getAuth(request);
@@ -30,3 +32,63 @@ export async function POST(request) {
     return NextResponse.json({ success: false, message: error.message });
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+// import connectDB from "@/config/db";
+// import Order from "@/models/Order";
+// import { getAuth } from "@clerk/nextjs/server";
+// import authSeller from "@/lib/authSeller";
+// import { NextResponse } from "next/server";
+
+// export async function POST(request) {
+//   try {
+//     // Extract userId from Clerk auth session
+//     const { userId } = getAuth(request);
+
+//     // Check if user is admin/seller
+//     const isAdmin = await authSeller(userId);
+//     if (!isAdmin) {
+//       return NextResponse.json(
+//         { success: false, message: "Unauthorized" },
+//         { status: 403 }
+//       );
+//     }
+
+//     // Connect to DB
+//     await connectDB();
+
+//     // Parse request body JSON
+//     const { orderId, status } = await request.json();
+
+//     // Find order by ID
+//     const order = await Order.findById(orderId);
+//     if (!order) {
+//       return NextResponse.json(
+//         { success: false, message: "Order not found" },
+//         { status: 404 }
+//       );
+//     }
+
+//     // Optional: Add any business logic here (e.g., disallow certain status changes)
+
+//     // Update order status and save
+//     order.status = status;
+//     await order.save();
+
+//     return NextResponse.json({ success: true, message: "Status updated" });
+//   } catch (error) {
+//     return NextResponse.json(
+//       { success: false, message: error.message || "Server error" },
+//       { status: 500 }
+//     );
+//   }
+// }

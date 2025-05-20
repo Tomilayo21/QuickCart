@@ -59,8 +59,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // PATCH: Update user role in Clerk
-export async function PATCH(req: NextRequest, context: { params: { id: string } }) {
-  const userId = context.params.id;
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const userId = params.id;
   const { role } = await req.json();
 
   try {
@@ -88,8 +91,11 @@ export async function PATCH(req: NextRequest, context: { params: { id: string } 
 }
 
 // DELETE: Remove user from Clerk
-export async function DELETE(_: NextRequest, context: { params: { id: string } }) {
-  const userId = context.params.id;
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const userId = params.id;
 
   try {
     const response = await fetch(`https://api.clerk.com/v1/users/${userId}`, {

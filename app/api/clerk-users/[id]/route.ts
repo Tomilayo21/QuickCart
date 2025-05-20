@@ -126,61 +126,60 @@
 
 
 
-import { NextRequest, NextResponse } from "next/server";
 
-// PATCH: Update user role in Clerk
+import { NextRequest, NextResponse } from 'next/server';
+
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
-  const { id } = context.params;
+  const { id } = params;
   const { role } = await req.json();
 
   try {
     const response = await fetch(`https://api.clerk.com/v1/users/${id}/metadata`, {
-      method: "PATCH",
+      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${process.env.CLERK_SECRET_KEY!}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ public_metadata: { role } }),
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error("PATCH Error:", error);
-      return NextResponse.json({ error: "Failed to update user role" }, { status: 500 });
+      const errorText = await response.text();
+      console.error('Clerk PATCH error:', errorText);
+      return NextResponse.json({ error: 'Failed to update user role' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// DELETE: Remove user from Clerk
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ): Promise<NextResponse> {
-  const { id } = context.params;
+  const { id } = params;
 
   try {
     const response = await fetch(`https://api.clerk.com/v1/users/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
         Authorization: `Bearer ${process.env.CLERK_SECRET_KEY!}`,
       },
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error("DELETE Error:", error);
-      return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+      const errorText = await response.text();
+      console.error('Clerk DELETE error:', errorText);
+      return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

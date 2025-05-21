@@ -508,3 +508,68 @@
 //     return NextResponse.json({ error: error.message || 'Server error' }, { status: 500 })
 //   }
 // }
+
+
+
+
+
+
+
+
+const CLERK_API_BASE = 'https://api.clerk.com/v1/users';
+
+export default async function handler(req, res) {
+  const { id } = req.query;
+
+  if (!id) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    if (req.method === 'PATCH') {
+      const { role } = req.body;
+
+      if (!role) {
+        return res.status(400).json({ error: 'Role is required' });
+      }
+
+      const response = await fetch(`${CLERK_API_BASE}/${id}/metadata`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY || ''}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ public_metadata: { role } }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Clerk PATCH error:', errorText);
+        return res.status(500).json({ error: 'Failed to update user role' });
+      }
+
+      return res.status(200).json({ success: true });
+    } else if (req.method === 'DELETE') {
+      const response = await fetch(`${CLERK_API_BASE}/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY || ''}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Clerk DELETE error:', errorText);
+        return res.status(500).json({ error: 'Failed to delete user' });
+      }
+
+      return res.status(200).json({ success: true });
+    } else {
+      res.setHeader('Allow', ['PATCH', 'DELETE']);
+      return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    }
+  } catch (error) {
+    console.error('API handler error:', error);
+    return res.status(500).json({ error: error.message || 'Server error' });
+  }
+}

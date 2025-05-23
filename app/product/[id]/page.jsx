@@ -1,373 +1,199 @@
-// 'use client';
-
-// import { useEffect, useState } from "react";
-// import { assets } from "@/assets/assets";
-// import ProductCard from "@/components/ProductCard";
-// import Navbar from "@/components/Navbar";
-// import Footer from "@/components/Footer";
-// import Image from "next/image";
-// import { useParams } from "next/navigation";
-// import Loading from "@/components/Loading";
-// import { useAppContext } from "@/context/AppContext";
-// import React from "react";
-
-// const Product = () => {
-//     const { id } = useParams();
-//     const { products, router, addToCart, user } = useAppContext();
-
-//     const [mainImage, setMainImage] = useState(null);
-//     const [productData, setProductData] = useState(null);
-//     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-
-//     const fetchProductData = async () => {
-//         const product = products.find(product => product._id === id);
-//         setProductData(product);
-//     };
-
-//     useEffect(() => {
-//         fetchProductData();
-//     }, [id, products.length]);
-
-//     const handleAddToCart = () => {
-//         if (!user) {
-//             setShowLoginPrompt(true);
-//             return;
-//         }
-//         addToCart(productData);
-//     };
-
-//     const handleGoToCart = () => {
-//         if (!user) {
-//             setShowLoginPrompt(true);
-//             return;
-//         }
-//         router.push('/cart');
-//     };
-
-//     return productData ? (
-//         <>
-//             <Navbar />
-//             <div className="px-6 md:px-16 lg:px-32 pt-14 space-y-10">
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-//                     <div className="px-5 lg:px-16 xl:px-20">
-//                         <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
-//                             <Image
-//                                 src={mainImage || productData.image[0]}
-//                                 alt={productData.name}
-//                                 className="w-full h-auto object-cover mix-blend-multiply"
-//                                 width={1280}
-//                                 height={720}
-//                             />
-//                         </div>
-
-//                         <div className="grid grid-cols-4 gap-4">
-//                             {productData.image.map((image, index) => (
-//                                 <div
-//                                     key={index}
-//                                     onClick={() => setMainImage(image)}
-//                                     className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
-//                                 >
-//                                     <Image
-//                                         src={image}
-//                                         alt={productData.name}
-//                                         className="w-full h-auto object-cover mix-blend-multiply"
-//                                         width={1280}
-//                                         height={720}
-//                                     />
-//                                 </div>
-//                             ))}
-//                         </div>
-//                     </div>
-
-//                     <div className="flex flex-col">
-//                         <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
-//                             {productData.name}
-//                         </h1>
-//                         <div className="flex items-center gap-2">
-//                             <div className="flex items-center gap-0.5">
-//                                 <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-//                                 <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-//                                 <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-//                                 <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-//                                 <Image className="h-4 w-4" src={assets.star_dull_icon} alt="star_dull_icon" />
-//                             </div>
-//                             <p>(4.5)</p>
-//                         </div>
-//                         <p className="text-gray-600 mt-3">
-//                             {productData.description}
-//                         </p>
-//                         <p className="text-3xl font-medium mt-6">
-//                             ${productData.offerPrice}
-//                             <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-//                                 ${productData.price}
-//                             </span>
-//                         </p>
-//                         <hr className="bg-gray-600 my-6" />
-//                         <div className="overflow-x-auto">
-//                             <table className="table-auto border-collapse w-full max-w-72">
-//                                 <tbody>
-//                                     <tr>
-//                                         <td className="text-gray-600 font-medium">Brand</td>
-//                                         <td className="text-gray-800/50 ">Generic</td>
-//                                     </tr>
-//                                     <tr>
-//                                         <td className="text-gray-600 font-medium">Color</td>
-//                                         <td className="text-gray-800/50 ">Multi</td>
-//                                     </tr>
-//                                     <tr>
-//                                         <td className="text-gray-600 font-medium">Category</td>
-//                                         <td className="text-gray-800/50">
-//                                             {productData.category}
-//                                         </td>
-//                                     </tr>
-//                                 </tbody>
-//                             </table>
-//                         </div>
-
-//                         <div className="flex flex-col gap-3 mt-10">
-//                             <div className="flex items-center gap-4">
-//                                 <button
-//                                     onClick={handleAddToCart}
-//                                     className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
-//                                 >
-//                                     Add to Cart
-//                                 </button>
-//                                 <button
-//                                     onClick={handleGoToCart}
-//                                     className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition"
-//                                 >
-//                                     Go to Cart
-//                                 </button>
-//                             </div>
-
-//                             {showLoginPrompt && (
-//                                 <p className="text-red-600 text-center font-semibold">
-//                                     Please <button
-//                                         onClick={() => router.push('/login')}
-//                                         className="underline text-orange-600"
-//                                     >
-//                                         log in
-//                                     </button> to use the cart features.
-//                                 </p>
-//                             )}
-//                         </div>
-
-//                     </div>
-//                 </div>
-
-//                 <div className="flex flex-col items-center">
-//                     <div className="flex flex-col items-center mb-4 mt-16">
-//                         <p className="text-3xl font-medium">
-//                             Featured <span className="font-medium text-orange-600">Products</span>
-//                         </p>
-//                         <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
-//                     </div>
-//                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
-//                         {products.slice(0, 5).map((product, index) => (
-//                             <ProductCard key={index} product={product} />
-//                         ))}
-//                     </div>
-//                     <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
-//                         See more
-//                     </button>
-//                 </div>
-//             </div>
-//             <Footer />
-//         </>
-//     ) : (
-//         <Loading />
-//     );
-// };
-
-// export default Product;
-
-
-
-
-
-
-
-
-
 'use client';
 
-import { useEffect, useState } from "react";
-import { assets } from "@/assets/assets";
-import ProductCard from "@/components/ProductCard";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import Loading from "@/components/Loading";
-import { useAppContext } from "@/context/AppContext";
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import ProductCard from '@/components/ProductCard';
+import Loading from '@/components/Loading';
+import { useAppContext } from '@/context/AppContext';
+import { useUser } from '@clerk/nextjs';
+import { FaStar, FaRegStar } from 'react-icons/fa';
 
-const Product = () => {
-    const { id } = useParams();
-    const { products, router, addToCart, user } = useAppContext();
+export default function ProductPage() {
+  const { id } = useParams();
+  const router = useRouter();
+  const { products, addToCart } = useAppContext();
+  const { user } = useUser();
 
-    const [mainImage, setMainImage] = useState(null);
-    const [productData, setProductData] = useState(null);
-    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [productData, setProductData] = useState(null);
+  const [mainImage, setMainImage] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [page, setPage] = useState(1);
+  const reviewsPerPage = 5;
 
-    const fetchProductData = async () => {
-        const product = products.find(product => product._id === id);
-        setProductData(product);
-    };
+  useEffect(() => {
+    setProductData(products.find(p => p._id === id) || null);
+  }, [id, products]);
 
-    useEffect(() => {
-        fetchProductData();
-    }, [id, products.length]);
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/reviews?productId=${id}`)
+      .then(res => res.json())
+      .then(data => setReviews(data));
+  }, [id]);
 
-    const handleAddToCart = () => {
-        if (!user) {
-            setShowLoginPrompt(true);
-            return;
-        }
-        addToCart(productData);
-    };
+  const handleAddToCart = () => {
+    if (!user) return router.push('/login');
+    addToCart(productData);
+  };
 
-    const handleGoToCart = () => {
-        if (!user) {
-            setShowLoginPrompt(true);
-            return;
-        }
-        router.push('/cart');
-    };
+  const handleSubmitReview = async () => {
+    if (!user) return alert('Please log in to submit a review.');
+    await fetch('/api/reviews', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ productId: id, rating, comment, userName: user.fullName || 'Anonymous' })
+    });
+    setRating(5);
+    setComment('');
+    setPage(1);
+    const refreshed = await fetch(`/api/reviews?productId=${id}`).then(r => r.json());
+    setReviews(refreshed);
+  };
 
-    return productData ? (
-        <>
-            <Navbar />
-            <div className="px-6 md:px-16 lg:px-32 mt-24 space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-                    <div className="px-5 lg:px-16 xl:px-20">
-                        <div className="rounded-lg overflow-hidden bg-gray-500/10 mb-4">
-                            <Image
-                                src={mainImage || productData.image[0]}
-                                alt={productData.name}
-                                className="w-full h-auto object-cover mix-blend-multiply"
-                                width={1280}
-                                height={720}
-                            />
-                        </div>
+  if (!productData) return <Loading />;
 
-                        <div className="grid grid-cols-4 gap-4">
-                            {productData.image.map((image, index) => (
-                                <div
-                                    key={index}
-                                    onClick={() => setMainImage(image)}
-                                    className="cursor-pointer rounded-lg overflow-hidden bg-gray-500/10"
-                                >
-                                    <Image
-                                        src={image}
-                                        alt={productData.name}
-                                        className="w-full h-auto object-cover mix-blend-multiply"
-                                        width={1280}
-                                        height={720}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+  const start = (page - 1) * reviewsPerPage;
+  const current = reviews.slice(start, start + reviewsPerPage);
 
-                    <div className="flex flex-col">
-                        <h1 className="text-3xl font-medium text-gray-800/90 mb-4">
-                            {productData.name}
-                        </h1>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-0.5">
-                                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                                <Image className="h-4 w-4" src={assets.star_icon} alt="star_icon" />
-                                <Image className="h-4 w-4" src={assets.star_dull_icon} alt="star_dull_icon" />
-                            </div>
-                            <p>(4.5)</p>
-                        </div>
-                        <p className="text-gray-600 mt-3">
-                            {productData.description}
-                        </p>
-                        <p className="text-3xl font-medium mt-6">
-                            ${productData.offerPrice}
-                            <span className="text-base font-normal text-gray-800/60 line-through ml-2">
-                                ${productData.price}
-                            </span>
-                        </p>
-                        <hr className="bg-gray-600 my-6" />
-                        <div className="overflow-x-auto">
-                            <table className="table-auto border-collapse w-full max-w-72">
-                                <tbody>
-                                    <tr>
-                                        <td className="text-gray-600 font-medium">Brand</td>
-                                        <td className="text-gray-800/50 ">{productData.brand}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="text-gray-600 font-medium">Color</td>
-                                        <td className="text-gray-800/50 ">{productData.color}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="text-gray-600 font-medium">Category</td>
-                                        <td className="text-gray-800/50">
-                                            {productData.category}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div className="flex flex-col gap-3 mt-10">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleAddToCart}
-                                    className="w-full py-3.5 bg-gray-100 text-gray-800/80 hover:bg-gray-200 transition"
-                                >
-                                    Add to Cart
-                                </button>
-                                <button
-                                    onClick={handleGoToCart}
-                                    className="w-full py-3.5 bg-orange-500 text-white hover:bg-orange-600 transition"
-                                >
-                                    Go to Cart
-                                </button>
-                            </div>
-
-                            {showLoginPrompt && (
-                                <p className="text-red-600 text-center font-semibold">
-                                    Please <button
-                                        onClick={() => router.push('/login')}
-                                        className="underline text-orange-600"
-                                    >
-                                        log in
-                                    </button> to use the cart features.
-                                </p>
-                            )}
-                        </div>
-
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center">
-                    <div className="flex flex-col items-center mb-4 mt-16">
-                        <p className="text-3xl font-medium">
-                            Featured <span className="font-medium text-orange-600">Products</span>
-                        </p>
-                        <div className="w-28 h-0.5 bg-orange-600 mt-2"></div>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mt-6 pb-14 w-full">
-                        {products.slice(0, 5).map((product, index) => (
-                            <ProductCard key={index} product={product} />
-                        ))}
-                    </div>
-                    <button className="px-8 py-2 mb-16 border rounded text-gray-500/70 hover:bg-slate-50/90 transition">
-                        See more
-                    </button>
-                </div>
-            </div>
-            <Footer />
-        </>
-    ) : (
-        <Loading />
+  const renderStars = (rating) => {
+    return (
+      <div className="flex text-yellow-500">
+        {[...Array(5)].map((_, i) =>
+          i < rating ? <FaStar key={i} /> : <FaRegStar key={i} />
+        )}
+      </div>
     );
-};
+  };
 
-export default Product;
+  return (
+    <>
+      <Navbar />
+      <div className="px-6 md:px-16 lg:px-32 mt-24 space-y-10">
+        {/* Product Info */}
+        <div className="grid md:grid-cols-2 gap-16">
+          <div>
+            <div className="rounded-lg overflow-hidden bg-gray-100 mb-4">
+              <Image
+                src={mainImage || productData.image[0]}
+                alt={productData.name}
+                width={1280} height={720}
+                className="w-full object-cover"
+              />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {productData.image.map((img,i) => (
+                <div key={i} className="cursor-pointer" onClick={()=>setMainImage(img)}>
+                  <Image src={img} alt="" width={200} height={200} className="w-full h-auto object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <h1 className="text-3xl font-bold">{productData.name}</h1>
+            <p className="mt-2 text-gray-700">{productData.description}</p>
+            <div className="mt-4">
+              <span className="text-2xl font-semibold">₦{productData.offerPrice}</span>
+              <span className="line-through text-gray-500 ml-2">₦{productData.price}</span>
+            </div>
+            <div className="mt-6 flex gap-4">
+              <button onClick={handleAddToCart} className="px-6 py-2 bg-indigo-600 text-white rounded">
+                Add to Cart
+              </button>
+              <button onClick={()=>router.push('/cart')} className="px-6 py-2 border border-indigo-600 rounded">
+                Go to Cart
+              </button>
+            </div>
+
+            {/* Submit Review */}
+            <div className="mt-8">
+              {user ? (
+                <>
+                  <h2 className="font-semibold mb-2">Leave a Review</h2>
+                  <label className="flex items-center gap-2 mb-2">
+                    Rating:
+                    <select
+                      value={rating}
+                      onChange={e => setRating(+e.target.value)}
+                      className="border rounded p-1"
+                    >
+                      {[1,2,3,4,5].map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    className="w-full border rounded p-2 mb-2"
+                    placeholder="Your comment..."
+                  />
+                  <button
+                    onClick={handleSubmitReview}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded"
+                  >
+                    Submit Review
+                  </button>
+                </>
+              ) : (
+                <p className="text-red-600">Please sign in to leave a review.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews List with Pagination */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold">Reviews</h2>
+          {current.length === 0 ? (
+            <p>No reviews yet.</p>
+          ) : current.map(r => (
+            <div key={r._id} className="border-b pb-2">
+              <p className="font-semibold">{r.userName}</p>
+              {renderStars(r.rating)}
+              <p className="text-gray-700">{r.comment}</p>
+            </div>
+          ))}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-4">
+              <button
+                onClick={() => setPage(p => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span>Page {page} of {totalPages}</span>
+              <button
+                onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                className="px-3 py-1 border rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Related Products */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">Related Products</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {products
+              .filter(p => p.category === productData.category && p._id !== id)
+              .slice(0,4)
+              .map(p => <ProductCard key={p._id} product={p} />)}
+          </div>
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+}

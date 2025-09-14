@@ -70,37 +70,27 @@ export const syncUserDeletion = inngest.createFunction(
 
 // Inngest function to create user's order in the database
 export const createUserOrder = inngest.createFunction(
-    {
-        id : 'create-user-order',
-        batchEvents : {
-            maxSize : 5,
-            timeout : '5s'
-        }
-    },
-    {
-        event : 'order/created'
-    },
-    async ({ events }) => {
-        const orders = events.map((event) => ({
-            userId: event.data.userId,
-            items: event.data.items,
-            amount: event.data.amount,
-            address: event.data.address,
-            date: event.data.date,
-            paymentMethod: event.data.paymentMethod,
-            status: event.data.status || "Pending",
-            proofOfPaymentUrl : event.data.proofOfPaymentUrl,
-            orderId : event.data.orderId,
-        }));
+  { id: "create-user-order" },
+  { event: "order/created" },
+  async ({ event }) => {
+    await connectDB();
 
-        await connectDB();
-        await Order.insertMany(orders);
+    const orderData = {
+      userId: event.data.userId,
+      items: event.data.items,
+      amount: event.data.amount,
+      address: event.data.address, // must be ObjectId
+      date: event.data.date,
+      paymentMethod: event.data.paymentMethod,
+      orderStatus: event.data.status || "Order Placed",
+      proofOfPaymentUrl: event.data.proofOfPaymentUrl || null,
+    };
 
+    const order = await Order.create(orderData);
 
-        return { success: true, processed: orders.length };
-    }
-)
-
+    return { success: true, orderId: order._id.toString() };
+  }
+);
 
 export const scheduledBroadcastSender = inngest.createFunction(
   { id: "scheduled-broadcast-sender" },

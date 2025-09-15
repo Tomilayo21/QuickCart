@@ -63,16 +63,26 @@ const OrderPlaced = () => {
 
         const orderData = JSON.parse(pending);
 
+        // const res = await axios.post(
+        //   "/api/order/create",
+        //   {
+        //     address: orderData.addressId,
+        //     items: orderData.items,
+        //     paymentMethod: orderData.paymentMethod,
+        //   },
+        //   {
+        //     headers: { Authorization: `Bearer ${token}` },
+        //   }
+        // );
         const res = await axios.post(
-          "/api/order/create",
+          orderData.paymentMethod === "Stripe"
+            ? "/api/order/stripe/create"
+            : "/api/order/paystack/create",
           {
             address: orderData.addressId,
             items: orderData.items,
-            paymentMethod: orderData.paymentMethod,
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
         if (!res.data.success) {

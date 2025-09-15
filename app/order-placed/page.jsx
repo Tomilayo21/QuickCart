@@ -74,8 +74,10 @@ const OrderPlaced = () => {
         //     headers: { Authorization: `Bearer ${token}` },
         //   }
         // );
+       
+        
         const res = await axios.post(
-          orderData.paymentMethod === "Stripe"
+          orderData.paymentMethod.toLowerCase() === "stripe"
             ? "/api/order/stripe/create"
             : "/api/order/paystack/create",
           {
@@ -84,6 +86,7 @@ const OrderPlaced = () => {
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
 
         if (!res.data.success) {
           toast.custom(

@@ -463,7 +463,7 @@ export async function POST(request) {
     console.error("[ORDER_POST_ERROR]", error);
     return NextResponse.json(
       { success: false, message: error.message || "Unexpected error" },
-      { status: 500 }
+      { status: 50 }
     );
   }
 }

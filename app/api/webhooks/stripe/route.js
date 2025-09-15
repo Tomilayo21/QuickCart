@@ -29,24 +29,36 @@ export async function POST(req) {
     const session = event.data.object;
     await connectDB();
 
-    // ✅ Ensure idempotency
-    const existingOrder = await Order.findOne({ sessionId: session.id });
-    if (!existingOrder) {
-      const order = new Order({
-        sessionId: session.id, // 👈 save sessionId
-        userId: session.metadata.userId,
-        address: JSON.parse(session.metadata.address),
-        items: JSON.parse(session.metadata.items),
-        totalAmount: session.amount_total / 100,
-        paymentStatus: "paid",
-      });
-
+    // ✅ Find existing order instead of creating new
+    const order = await Order.findOne({ sessionId: session.id });
+    if (order) {
+      order.paymentStatus = "Successful";
+      order.orderStatus = "Order Placed";
       await order.save();
+      console.log("✅ Stripe order updated:", order._id);
+    } else {
+      console.warn("⚠️ Stripe session completed but no matching order found:", session.id);
     }
   }
 
   return NextResponse.json({ received: true });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -79,43 +91,38 @@ export async function POST(req) {
 
 // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// export const config = { api: { bodyParser: false } };
+// export const config = {
+//   api: { bodyParser: false }, // required for Stripe
+// };
 
 // export async function POST(req) {
-//   const buf = await req.arrayBuffer();
-//   const rawBody = Buffer.from(buf);
+//   await connectDB();
+
 //   const sig = req.headers.get("stripe-signature");
+//   const rawBody = await req.text();
 
-//   let event;
 //   try {
-//     event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
-//   } catch (err) {
-//     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
-//   }
+//     const event = stripe.webhooks.constructEvent(
+//       rawBody,
+//       sig,
+//       process.env.STRIPE_WEBHOOK_SECRET
+//     );
 
-//   if (event.type === "checkout.session.completed") {
-//     const session = event.data.object;
-//     await connectDB();
+//     if (event.type === "checkout.session.completed") {
+//       const session = event.data.object;
+//       const orderId = session.metadata.orderId;
 
-//     // ✅ Find the existing order and update
-//     const existingOrder = await Order.findOne({ sessionId: session.id });
-//     if (existingOrder) {
-//       existingOrder.paymentStatus = "paid";
-//       existingOrder.orderStatus = "Order Placed";
-//       await existingOrder.save();
-//     } else {
-//       // Optional fallback: create only if not found (shouldn't happen normally)
-//       await Order.create({
-//         sessionId: session.id,
-//         userId: session.metadata.userId,
-//         address: JSON.parse(session.metadata.address),
-//         items: JSON.parse(session.metadata.items),
-//         totalAmount: session.amount_total / 100,
-//         paymentStatus: "paid",
-//         orderStatus: "Order Placed",
-//       });
+//       if (orderId) {
+//         await Order.findByIdAndUpdate(orderId, {
+//           paymentStatus: "successful",
+//         });
+//         console.log(`[STRIPE_WEBHOOK] Order ${orderId} marked successful ✅`);
+//       }
 //     }
-//   }
 
-//   return NextResponse.json({ received: true });
+//     return NextResponse.json({ received: true });
+//   } catch (err) {
+//     console.error("[STRIPE_WEBHOOK_ERROR]", err.message);
+//     return NextResponse.json({ error: "Webhook error" }, { status: 400 });
+//   }
 // }

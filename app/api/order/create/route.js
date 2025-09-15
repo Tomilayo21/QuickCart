@@ -1,100 +1,100 @@
 
-// //Stripe only
-// // import { inngest } from "@/config/inngest";
-// // import Product from "@/models/Product";
-// // import User from "@/models/User";
-// // import { getAuth } from "@clerk/nextjs/server";
-// // import { NextResponse } from "next/server";
-// // import connectDB from "@/config/db";
-
-// // export async function POST(request) {
-// //   try {
-// //     await connectDB();
+//Stripe only
+// import { inngest } from "@/config/inngest";
+// import Product from "@/models/Product";
+// import User from "@/models/User";
+// import { getAuth } from "@clerk/nextjs/server";
+// import { NextResponse } from "next/server";
+// import connectDB from "@/config/db";
+
+// export async function POST(request) {
+//   try {
+//     await connectDB();
 
-// //     const { userId } = getAuth(request);
-// //     if (!userId) {
-// //       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
-// //     }
+//     const { userId } = getAuth(request);
+//     if (!userId) {
+//       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+//     }
 
-// //     let body;
-// //     try {
-// //       body = await request.json();
-// //     } catch {
-// //       return NextResponse.json({ success: false, message: "Invalid JSON body" }, { status: 400 });
-// //     }
+//     let body;
+//     try {
+//       body = await request.json();
+//     } catch {
+//       return NextResponse.json({ success: false, message: "Invalid JSON body" }, { status: 400 });
+//     }
 
-// //     console.log("[ORDER_CREATE_REQUEST_BODY]", body);
+//     console.log("[ORDER_CREATE_REQUEST_BODY]", body);
 
-// //     let { address, items, paymentMethod } = body;
+//     let { address, items, paymentMethod } = body;
 
-// //     // 🔹 Normalize items: if it's an object, convert to array
-// //     if (items && !Array.isArray(items) && typeof items === "object") {
-// //       items = Object.entries(items).map(([product, quantity]) => ({
-// //         product,
-// //         quantity,
-// //       }));
-// //     }
+//     // 🔹 Normalize items: if it's an object, convert to array
+//     if (items && !Array.isArray(items) && typeof items === "object") {
+//       items = Object.entries(items).map(([product, quantity]) => ({
+//         product,
+//         quantity,
+//       }));
+//     }
 
-// //     if (!address || !Array.isArray(items) || items.length === 0 || !paymentMethod) {
-// //       return NextResponse.json({ success: false, message: "Invalid order data" }, { status: 400 });
-// //     }
+//     if (!address || !Array.isArray(items) || items.length === 0 || !paymentMethod) {
+//       return NextResponse.json({ success: false, message: "Invalid order data" }, { status: 400 });
+//     }
 
-// //     // Validate stock + calculate total
-// //     let totalAmount = 0;
-// //     for (const item of items) {
-// //       if (!item.product || !item.quantity) {
-// //         return NextResponse.json({ success: false, message: "Each item must have product + quantity" }, { status: 400 });
-// //       }
+//     // Validate stock + calculate total
+//     let totalAmount = 0;
+//     for (const item of items) {
+//       if (!item.product || !item.quantity) {
+//         return NextResponse.json({ success: false, message: "Each item must have product + quantity" }, { status: 400 });
+//       }
 
-// //       const product = await Product.findById(item.product);
-// //       if (!product) {
-// //         return NextResponse.json({ success: false, message: `Product not found: ${item.product}` }, { status: 404 });
-// //       }
+//       const product = await Product.findById(item.product);
+//       if (!product) {
+//         return NextResponse.json({ success: false, message: `Product not found: ${item.product}` }, { status: 404 });
+//       }
 
-// //       if (product.stock < item.quantity) {
-// //         return NextResponse.json(
-// //           { success: false, message: `Insufficient stock for ${product.name}` },
-// //           { status: 400 }
-// //         );
-// //       }
+//       if (product.stock < item.quantity) {
+//         return NextResponse.json(
+//           { success: false, message: `Insufficient stock for ${product.name}` },
+//           { status: 400 }
+//         );
+//       }
 
-// //       totalAmount += product.price * item.quantity;
-// //     }
+//       totalAmount += product.price * item.quantity;
+//     }
 
-// //     // Deduct stock
-// //     for (const item of items) {
-// //       const product = await Product.findById(item.product);
-// //       product.stock -= item.quantity;
-// //       await product.save();
-// //     }
+//     // Deduct stock
+//     for (const item of items) {
+//       const product = await Product.findById(item.product);
+//       product.stock -= item.quantity;
+//       await product.save();
+//     }
 
-// //     // Fire Inngest event
-// //     await inngest.send({
-// //       name: "order/created",
-// //       data: {
-// //         userId,
-// //         address,
-// //         items,
-// //         amount: totalAmount,
-// //         date: Date.now(),
-// //         paymentMethod,
-// //         status: "Order Placed",
-// //       },
-// //     });
+//     // Fire Inngest event
+//     await inngest.send({
+//       name: "order/created",
+//       data: {
+//         userId,
+//         address,
+//         items,
+//         amount: totalAmount,
+//         date: Date.now(),
+//         paymentMethod,
+//         status: "Order Placed",
+//       },
+//     });
 
-// //     // Clear cart
-// //     const user = await User.findById(userId);
-// //     if (user) {
-// //       user.cartItems = {};
-// //       await user.save();
-// //     }
+//     // Clear cart
+//     const user = await User.findById(userId);
+//     if (user) {
+//       user.cartItems = {};
+//       await user.save();
+//     }
 
-// //     return NextResponse.json({ success: true, message: "Order created successfully" });
-// //   } catch (error) {
-// //     console.error("[ORDER_POST_ERROR]", error);
-// //     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-// //   }
-// // }
+//     return NextResponse.json({ success: true, message: "Order created successfully" });
+//   } catch (error) {
+//     console.error("[ORDER_POST_ERROR]", error);
+//     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+//   }
+// }
 
 
 
@@ -158,111 +158,111 @@
 
 
 
-// //PayStack only
-// // import { inngest } from "@/config/inngest";
-// // import Product from "@/models/Product";
-// // import User from "@/models/User";
-// // import Order from "@/models/Order";
-// // import connectDB from "@/config/db";
-// // import { getAuth } from "@clerk/nextjs/server";
-// // import { NextResponse } from "next/server";
+//PayStack only
+// import { inngest } from "@/config/inngest";
+// import Product from "@/models/Product";
+// import User from "@/models/User";
+// import Order from "@/models/Order";
+// import connectDB from "@/config/db";
+// import { getAuth } from "@clerk/nextjs/server";
+// import { NextResponse } from "next/server";
 
-// // export async function POST(request) {
-// //   try {
-// //     await connectDB();
+// export async function POST(request) {
+//   try {
+//     await connectDB();
 
-// //     const { userId } = getAuth(request);
-// //     if (!userId) {
-// //       return NextResponse.json(
-// //         { success: false, message: "Unauthorized" },
-// //         { status: 401 }
-// //       );
-// //     }
+//     const { userId } = getAuth(request);
+//     if (!userId) {
+//       return NextResponse.json(
+//         { success: false, message: "Unauthorized" },
+//         { status: 401 }
+//       );
+//     }
 
-// //     const body = await request.json();
-// //     console.log("[ORDER_CREATE_REQUEST_BODY]", body);
+//     const body = await request.json();
+//     console.log("[ORDER_CREATE_REQUEST_BODY]", body);
 
-// //     const { address, items, paymentMethod } = body;
+//     const { address, items, paymentMethod } = body;
 
-// //     if (!address || !items || Object.keys(items).length === 0 || !paymentMethod) {
-// //       return NextResponse.json(
-// //         { success: false, message: "Invalid order data" },
-// //         { status: 400 }
-// //       );
-// //     }
+//     if (!address || !items || Object.keys(items).length === 0 || !paymentMethod) {
+//       return NextResponse.json(
+//         { success: false, message: "Invalid order data" },
+//         { status: 400 }
+//       );
+//     }
 
-// //     // Convert { productId: qty } into array
-// //     const itemsArray = Object.entries(items).map(([product, quantity]) => ({
-// //       product,
-// //       quantity,
-// //     }));
+//     // Convert { productId: qty } into array
+//     const itemsArray = Object.entries(items).map(([product, quantity]) => ({
+//       product,
+//       quantity,
+//     }));
 
-// //     // Validate stock and calculate total
-// //     let totalAmount = 0;
-// //     for (const item of itemsArray) {
-// //       const product = await Product.findById(item.product);
-// //       if (!product) {
-// //         return NextResponse.json(
-// //           { success: false, message: "Product not found" },
-// //           { status: 404 }
-// //         );
-// //       }
-// //       if (product.stock < item.quantity) {
-// //         return NextResponse.json(
-// //           {
-// //             success: false,
-// //             message: `Insufficient stock for ${product.name}`,
-// //           },
-// //           { status: 400 }
-// //         );
-// //       }
-// //       totalAmount += product.offerPrice * item.quantity;
-// //     }
+//     // Validate stock and calculate total
+//     let totalAmount = 0;
+//     for (const item of itemsArray) {
+//       const product = await Product.findById(item.product);
+//       if (!product) {
+//         return NextResponse.json(
+//           { success: false, message: "Product not found" },
+//           { status: 404 }
+//         );
+//       }
+//       if (product.stock < item.quantity) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: `Insufficient stock for ${product.name}`,
+//           },
+//           { status: 400 }
+//         );
+//       }
+//       totalAmount += product.offerPrice * item.quantity;
+//     }
 
-// //     // Deduct stock
-// //     for (const item of itemsArray) {
-// //       const product = await Product.findById(item.product);
-// //       product.stock -= item.quantity;
-// //       await product.save();
-// //     }
+//     // Deduct stock
+//     for (const item of itemsArray) {
+//       const product = await Product.findById(item.product);
+//       product.stock -= item.quantity;
+//       await product.save();
+//     }
 
-// //     // ✅ Save Order in DB (same as Stripe flow)
-// //     const order = await Order.create({
-// //       userId,
-// //       address,
-// //       items: itemsArray,
-// //       amount: totalAmount,
-// //       date: Date.now(),
-// //       paymentMethod,
-// //       status: "Order Placed",
-// //     });
+//     // ✅ Save Order in DB (same as Stripe flow)
+//     const order = await Order.create({
+//       userId,
+//       address,
+//       items: itemsArray,
+//       amount: totalAmount,
+//       date: Date.now(),
+//       paymentMethod,
+//       status: "Order Placed",
+//     });
 
-// //     // Fire Inngest event (optional: for async stuff like sending emails)
-// //     await inngest.send({
-// //       name: "order/created",
-// //       data: order.toObject(),
-// //     });
+//     // Fire Inngest event (optional: for async stuff like sending emails)
+//     await inngest.send({
+//       name: "order/created",
+//       data: order.toObject(),
+//     });
 
-// //     // Clear cart
-// //     const user = await User.findById(userId);
-// //     if (user) {
-// //       user.cartItems = {};
-// //       await user.save();
-// //     }
+//     // Clear cart
+//     const user = await User.findById(userId);
+//     if (user) {
+//       user.cartItems = {};
+//       await user.save();
+//     }
 
-// //     return NextResponse.json({
-// //       success: true,
-// //       message: "Order created successfully",
-// //       order,
-// //     });
-// //   } catch (error) {
-// //     console.error("[ORDER_POST_ERROR]", error);
-// //     return NextResponse.json(
-// //       { success: false, message: error.message },
-// //       { status: 500 }
-// //     );
-// //   }
-// // }
+//     return NextResponse.json({
+//       success: true,
+//       message: "Order created successfully",
+//       order,
+//     });
+//   } catch (error) {
+//     console.error("[ORDER_POST_ERROR]", error);
+//     return NextResponse.json(
+//       { success: false, message: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 
 
@@ -467,41 +467,6 @@
 //     );
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

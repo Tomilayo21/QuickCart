@@ -257,12 +257,68 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import connectDB from "@/config/db";
 import Product from "@/models/Product";
-import Order from "@/models/Order";
-import mongoose from "mongoose";
 import { getAuth } from "@clerk/nextjs/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
@@ -270,39 +326,28 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-
 export async function POST(req) {
   try {
     await connectDB();
-
     const { userId } = getAuth(req);
     if (!userId) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
 
-    const { items, address, paymentMethod } = await req.json();
+    const { items, addressId, paymentMethod } = await req.json();
 
-    if (!items || typeof items !== "object" || Array.isArray(items))
-      return NextResponse.json({ success: false, message: "Invalid cart format" }, { status: 400 });
-
-    const itemsArray = Object.entries(items).map(([id, qty]) => ({ product: id, quantity: qty }));
-    const validIds = itemsArray.map(i => i.product).filter(id => mongoose.Types.ObjectId.isValid(id));
-    const dbProducts = await Product.find({ _id: { $in: validIds } });
-
-    const line_items = dbProducts.map(product => {
-      const quantity = parseInt(items[product._id.toString()]);
-      const price = product.offerPrice || 0;
-
-      return {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: product.name,
-            images: product.image?.[0] ? [product.image[0]] : ["https://via.placeholder.com/300"],
+    const line_items = await Promise.all(
+      Object.entries(items).map(async ([id, qty]) => {
+        const product = await Product.findById(id);
+        if (!product) throw new Error("Product not found: " + id);
+        return {
+          price_data: {
+            currency: "usd",
+            product_data: { name: product.name, images: [product.image?.[0] || "https://via.placeholder.com/300"] },
+            unit_amount: Math.round(product.offerPrice * 100),
           },
-          unit_amount: Math.round(price * 100),
-        },
-        quantity,
-      };
-    });
+          quantity: qty,
+        };
+      })
+    );
 
     const domain = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000";
 
-    // ✅ Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -311,27 +356,15 @@ export async function POST(req) {
       cancel_url: `${domain}/cart`,
       metadata: {
         userId,
-        address: JSON.stringify(address || {}),
-        paymentMethod: paymentMethod || "card",
-        items: JSON.stringify(itemsArray),
+        addressId,
+        items: JSON.stringify(Object.entries(items).map(([product, quantity]) => ({ product, quantity }))),
+        paymentMethod,
       },
     });
 
-    // ✅ Create order in DB immediately with status "pending"
-    const order = new Order({
-      sessionId: session.id,
-      userId,
-      address: address || {},
-      items: itemsArray,
-      totalAmount: session.amount_total / 100,
-      paymentStatus: "pending",
-      orderStatus: "Pending",
-    });
-    await order.save();
-
     return NextResponse.json({ success: true, url: session.url });
-  } catch (error) {
-    console.error("[STRIPE_CHECKOUT_ERROR]", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (err) {
+    console.error("Stripe Checkout Error:", err);
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }

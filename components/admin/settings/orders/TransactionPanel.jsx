@@ -622,102 +622,81 @@ return (
     )}
 
     {/* Pagination controls */}
-    {/* {totalPages > 1 && (
+
+    {totalPages > 1 && (
       <div className="mt-8 flex justify-center items-center">
-        <div className="flex items-center gap-2 bg-white dark:bg-gray-900 shadow-sm border rounded-lg px-2 sm:px-4 py-2 overflow-x-auto">
+        <div className="flex items-center gap-1 sm:gap-2 bg-white dark:bg-gray-900 shadow-sm border rounded-lg px-2 sm:px-4 py-2 overflow-x-auto">
+          
+          {/* Prev */}
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
           >
             Prev
           </button>
-          {Array.from({ length: totalPages }).map((_, i) => (
+
+          {/* First page */}
+          <button
+            onClick={() => setPage(1)}
+            className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded ${
+              page === 1
+                ? "bg-orange-600 text-white shadow"
+                : "bg-gray-100 dark:bg-gray-800 hover:bg-orange-100"
+            }`}
+          >
+            1
+          </button>
+
+          {/* Left dots */}
+          {page > 3 && <span className="px-1 sm:px-2 text-gray-500">…</span>}
+
+          {/* Middle pages (current ±1) */}
+          {Array.from({ length: 3 }, (_, i) => page - 1 + i)
+            .filter((p) => p > 1 && p < totalPages)
+            .map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded ${
+                  page === p
+                    ? "bg-orange-600 text-white shadow"
+                    : "bg-gray-100 dark:bg-gray-800 hover:bg-orange-100"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+          {/* Right dots */}
+          {page < totalPages - 2 && <span className="px-1 sm:px-2 text-gray-500">…</span>}
+
+          {/* Last page */}
+          {totalPages > 1 && (
             <button
-              key={i}
-              onClick={() => setPage(i + 1)}
-              className={`px-3 py-1 text-sm rounded whitespace-nowrap ${
-                page === i + 1
-                  ? "bg-orange-600 text-white"
+              onClick={() => setPage(totalPages)}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded ${
+                page === totalPages
+                  ? "bg-orange-600 text-white shadow"
                   : "bg-gray-100 dark:bg-gray-800 hover:bg-orange-100"
               }`}
             >
-              {i + 1}
+              {totalPages}
             </button>
-          ))}
+          )}
+
+          {/* Next */}
           <button
             disabled={page === totalPages}
             onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
+            className="px-2 sm:px-3 py-1 text-xs sm:text-sm rounded bg-gray-200 dark:bg-gray-700 disabled:opacity-50"
           >
             Next
           </button>
         </div>
       </div>
-    )} */}
+    )}
 
-{totalPages > 1 && (
-  <div className="mt-8 flex justify-center items-center">
-    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 shadow-sm border rounded-lg px-2 sm:px-4 py-2">
-      
-      {/* Prev */}
-      <button
-        disabled={page === 1}
-        onClick={() => setPage((p) => Math.max(p - 1, 1))}
-        className="px-3 py-1 text-xs sm:text-sm rounded-lg bg-gray-200 dark:bg-gray-700 
-                   disabled:opacity-50"
-      >
-        Prev
-      </button>
-
-      {/* Always show first 3 pages */}
-      {[1, 2, 3].map((num) =>
-        num <= totalPages && (
-          <button
-            key={num}
-            onClick={() => setPage(num)}
-            className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${
-              page === num
-                ? "bg-orange-600 text-white shadow"
-                : "bg-gray-100 dark:bg-gray-800 hover:bg-orange-100"
-            }`}
-          >
-            {num}
-          </button>
-        )
-      )}
-
-      {/* Dots if there are more than 4 pages */}
-      {totalPages > 4 && (
-        <span className="px-2 text-gray-500">...</span>
-      )}
-
-      {/* Last page */}
-      {totalPages > 3 && (
-        <button
-          onClick={() => setPage(totalPages)}
-          className={`px-3 py-1 text-xs sm:text-sm rounded-lg ${
-            page === totalPages
-              ? "bg-orange-600 text-white shadow"
-              : "bg-gray-100 dark:bg-gray-800 hover:bg-orange-100"
-          }`}
-        >
-          {totalPages}
-        </button>
-      )}
-
-      {/* Next */}
-      <button
-        disabled={page === totalPages}
-        onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-        className="px-3 py-1 text-xs sm:text-sm rounded-lg bg-gray-200 dark:bg-gray-700 
-                   disabled:opacity-50"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-)}
 
 
   </div>

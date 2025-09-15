@@ -181,91 +181,132 @@ const OrderSummary = () => {
     }
   };
 
+  // const handlePayment = async () => {
+  //   if (processing) return;
+  //   if (!selectedAddress) return toast.error("Please select an address");
+
+  //   // Convert cart to array: [{ product, quantity }]
+  //   const cartItemsArray = Object.keys(cartItems)
+  //     .map((key) => ({ product: key, quantity: cartItems[key] }))
+  //     .filter((item) => item.quantity > 0);
+
+  //   if (cartItemsArray.length === 0) return toast.error("Cart is empty");
+
+  //   setProcessing(true);
+
+  //   try {
+  //     const token = await getToken();
+
+  //     // ✅ Stripe payment flow
+  //     if (selected.id === "stripe") {
+  //       const cartItemsObject = Object.keys(cartItems).reduce((acc, id) => {
+  //         acc[id] = cartItems[id];
+  //         return acc;
+  //       }, {});
+
+  //       const { data } = await axios.post(
+  //         "/api/checkout/stripe",
+  //         {
+  //           items: cartItemsObject,
+  //           address: selectedAddress,       // optional, for metadata or future use
+  //           paymentMethod: selected.id
+  //         },
+  //         {
+  //           headers: { Authorization: `Bearer ${token}` }
+  //         }
+  //       );
+
+  //       if (!data.url) throw new Error("No Stripe session URL returned");
+
+  //       // Save order info temporarily to finalize after redirect
+  //       sessionStorage.setItem("pendingOrder", JSON.stringify({
+  //         addressId: selectedAddress._id,
+  //         items: cartItemsArray,
+  //         paymentMethod: selected.id
+  //       }));
+
+  //       return (window.location.href = data.url);
+  //     }
+      
+  //     if (selected.id === "paystack") {
+  //       const cartItemsObject = Object.keys(cartItems).reduce((acc, id) => {
+  //         acc[id] = cartItems[id];
+  //         return acc;
+  //       }, {});
+
+  //       const { data } = await axios.post(
+  //         "/api/checkout/paystack",
+  //         {
+  //           items: cartItemsObject,   // ✅ now object, matches backend
+  //           address: selectedAddress,
+  //         },
+  //         { headers: { Authorization: `Bearer ${token}` } }
+  //       );
+
+  //       if (!data.success) throw new Error("Paystack init failed");
+
+  //       sessionStorage.setItem("pendingOrder", JSON.stringify({
+  //         addressId: selectedAddress._id,
+  //         items: cartItemsObject,
+  //         paymentMethod: selected.id,
+  //       }));
+
+  //       return (window.location.href = data.authorizationUrl);
+  //     }
+
+  //     // ✅ Other payment methods (bank transfer, PayPal, etc.)
+  //     if (selected.url.startsWith("/")) {
+  //       router.push(selected.url);
+  //     } else {
+  //       window.location.href = selected.url;
+  //     }
+  //   } catch (error) {
+  //     toast.error(error.message || "Payment initialization failed");
+  //   } finally {
+  //     setProcessing(false);
+  //   }
+  // };
+
+
   const handlePayment = async () => {
     if (processing) return;
     if (!selectedAddress) return toast.error("Please select an address");
 
-    // Convert cart to array: [{ product, quantity }]
-    const cartItemsArray = Object.keys(cartItems)
-      .map((key) => ({ product: key, quantity: cartItems[key] }))
-      .filter((item) => item.quantity > 0);
+    const cartItemsObject = Object.keys(cartItems)
+      .filter(key => cartItems[key] > 0)
+      .reduce((acc, key) => { acc[key] = cartItems[key]; return acc; }, {});
 
-    if (cartItemsArray.length === 0) return toast.error("Cart is empty");
+    if (Object.keys(cartItemsObject).length === 0) return toast.error("Cart is empty");
 
     setProcessing(true);
-
     try {
       const token = await getToken();
 
-      // ✅ Stripe payment flow
       if (selected.id === "stripe") {
-        const cartItemsObject = Object.keys(cartItems).reduce((acc, id) => {
-          acc[id] = cartItems[id];
-          return acc;
-        }, {});
-
-        const { data } = await axios.post(
-          "/api/checkout/stripe",
-          {
-            items: cartItemsObject,
-            address: selectedAddress,       // optional, for metadata or future use
-            paymentMethod: selected.id
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` }
-          }
-        );
+        const { data } = await axios.post("/api/checkout/stripe", {
+          items: cartItemsObject,
+          addressId: selectedAddress._id,
+          paymentMethod: selected.id,
+        }, { headers: { Authorization: `Bearer ${token}` } });
 
         if (!data.url) throw new Error("No Stripe session URL returned");
 
-        // Save order info temporarily to finalize after redirect
-        sessionStorage.setItem("pendingOrder", JSON.stringify({
-          addressId: selectedAddress._id,
-          items: cartItemsArray,
-          paymentMethod: selected.id
-        }));
+        // ✅ Only store temporarily for UI
+        sessionStorage.setItem("pendingOrder", JSON.stringify({ items: cartItemsObject, addressId: selectedAddress._id }));
 
-        return (window.location.href = data.url);
+        window.location.href = data.url;
       }
-      
-      if (selected.id === "paystack") {
-        const cartItemsObject = Object.keys(cartItems).reduce((acc, id) => {
-          acc[id] = cartItems[id];
-          return acc;
-        }, {});
-
-        const { data } = await axios.post(
-          "/api/checkout/paystack",
-          {
-            items: cartItemsObject,   // ✅ now object, matches backend
-            address: selectedAddress,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (!data.success) throw new Error("Paystack init failed");
-
-        sessionStorage.setItem("pendingOrder", JSON.stringify({
-          addressId: selectedAddress._id,
-          items: cartItemsObject,
-          paymentMethod: selected.id,
-        }));
-
-        return (window.location.href = data.authorizationUrl);
-      }
-
-      // ✅ Other payment methods (bank transfer, PayPal, etc.)
-      if (selected.url.startsWith("/")) {
-        router.push(selected.url);
-      } else {
-        window.location.href = selected.url;
-      }
-    } catch (error) {
-      toast.error(error.message || "Payment initialization failed");
+    } catch (err) {
+      toast.error(err.message || "Payment failed");
     } finally {
       setProcessing(false);
     }
   };
+
+
+
+
+
 
   useEffect(() => {
     if (user) fetchUserAddresses();

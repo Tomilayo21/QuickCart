@@ -1195,7 +1195,7 @@ export default function TransactionPanel() {
                         className="hover:bg-gray-100 dark:hover:bg-neutral-700"
                       >
                         <td className="border px-2 py-1">{txn.orderId}</td>
-                        <td className="border px-2 py-1">{txn.username}</td>
+                        <td className="border px-2 py-1">{txn.userId?.username}</td>
                         <td className="border px-2 py-1">
                           {currency}
                           {txn.amount?.toFixed(2)}
@@ -1264,7 +1264,7 @@ export default function TransactionPanel() {
                     {/* Body */}
                     <div className="mt-2 text-sm space-y-1">
                       <p>
-                        <span className="font-medium">User:</span> {txn.username}
+                        <span className="font-medium">User:</span> {txn.userId?.username}
                       </p>
                       <p>
                         <span className="font-medium">Amount:</span> {currency}

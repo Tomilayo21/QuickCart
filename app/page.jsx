@@ -69,7 +69,7 @@ const Home = () => {
     return (
       <div className="flex flex-col justify-center items-center h-[70vh] space-y-4">
         <Loading />
-        <p className="text-gray-700 text-lg font-medium">Please wait while loading...</p>
+        {/* <p className="text-gray-700 text-lg font-medium">Please wait while loading...</p> */}
       </div>
     );
   }

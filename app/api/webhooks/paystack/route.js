@@ -214,25 +214,107 @@
 
 
 
-// app/api/order/paystack/webhook/route.js
+// // app/api/order/paystack/webhook/route.js
+// import { NextResponse } from "next/server";
+// import crypto from "crypto";
+// import connectDB from "@/config/db";
+// import Order from "@/models/Order";
+// import User from "@/models/User";
+
+// // ✅ Prevent Next.js from parsing body
+// export const config = {
+//   api: {
+//     bodyParser: false,
+//   },
+// };
+
+// export async function POST(req) {
+//   try {
+//     const rawBody = await req.text();
+//     const signature = req.headers.get("x-paystack-signature");
+
+//     const hash = crypto
+//       .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
+//       .update(rawBody)
+//       .digest("hex");
+
+//     if (hash !== signature) {
+//       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+//     }
+
+//     const event = JSON.parse(rawBody);
+
+//     if (event.event === "charge.success") {
+//       await connectDB();
+
+//       const reference = event.data.reference;
+
+//       // ✅ Find order by reference
+//       const order = await Order.findOne({ referenceId: reference });
+//       if (order) {
+//         order.paymentStatus = "Successful";
+//         order.orderStatus = "Order Placed";
+//         await order.save();
+
+//         await User.findByIdAndUpdate(order.userId, { cartItems: {} });
+
+//         console.log("✅ Paystack order updated:", order._id);
+//       } else {
+//         console.warn("⚠️ Paystack success but no matching order:", reference);
+//       }
+//     }
+
+//     return NextResponse.json({ received: true });
+//   } catch (err) {
+//     console.error("[PAYSTACK_WEBHOOK_ERROR]", err);
+//     return NextResponse.json({ error: err.message || "Webhook failed" }, { status: 500 });
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import connectDB from "@/config/db";
 import Order from "@/models/Order";
-import User from "@/models/User";
-
-// ✅ Prevent Next.js from parsing body
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export async function POST(req) {
   try {
+    await connectDB();
+
+    // Get raw body and headers
     const rawBody = await req.text();
     const signature = req.headers.get("x-paystack-signature");
 
+    // Verify signature
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
       .update(rawBody)
@@ -244,29 +326,28 @@ export async function POST(req) {
 
     const event = JSON.parse(rawBody);
 
+    // Only process successful charges
     if (event.event === "charge.success") {
-      await connectDB();
+      const data = event.data;
 
-      const reference = event.data.reference;
+      // Find order by referenceId (schema field)
+      const order = await Order.findOne({ referenceId: data.reference });
 
-      // ✅ Find order by reference
-      const order = await Order.findOne({ referenceId: reference });
-      if (order) {
-        order.paymentStatus = "Successful";
-        order.orderStatus = "Order Placed";
-        await order.save();
-
-        await User.findByIdAndUpdate(order.userId, { cartItems: {} });
-
-        console.log("✅ Paystack order updated:", order._id);
-      } else {
-        console.warn("⚠️ Paystack success but no matching order:", reference);
+      if (!order) {
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
+
+      // Update payment status
+      order.paymentStatus = "Successful";
+      order.orderStatus = "Order Placed";
+      await order.save();
+
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    return NextResponse.json({ received: true });
-  } catch (err) {
-    console.error("[PAYSTACK_WEBHOOK_ERROR]", err);
-    return NextResponse.json({ error: err.message || "Webhook failed" }, { status: 500 });
+    return NextResponse.json({ received: true }, { status: 200 });
+  } catch (error) {
+    console.error("Paystack Webhook Error:", error);
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }

@@ -12,15 +12,15 @@ import { X, User, Phone, Mail, MapPin, Globe, Landmark } from "lucide-react"
 const paymentMethods = [
   { id: 'stripe', label: 'Stripe', fee: 0.029, url: null },
   { id: 'paystack', label: 'Paystack', fee: 0.015, url: null },
-  { id: 'paypal', label: 'PayPal', fee: 0.034, url: 'https://www.paypal.com/checkoutnow' },
-  { id: 'apple', label: 'Apple Pay', fee: 0.025, url: 'https://www.apple.com/apple-pay/' },
-  { id: 'google', label: 'Google Pay', fee: 0.025, url: 'https://pay.google.com/' },
-  { id: 'amazon', label: 'Amazon Pay', fee: 0.03, url: 'https://pay.amazon.com/' },
-  { id: 'bank-transfer', label: 'Direct Bank Transfer', fee: 0.015, url: '/payment/bank-transfer' },
-  { id: 'crypto', label: 'Cryptocurrency', fee: 0.02, url: 'https://commerce.coinbase.com/' },
-  { id: 'mpesa', label: 'M-Pesa', fee: 0.025, url: 'https://www.safaricom.co.ke/personal/m-pesa' },
-  { id: 'paytm', label: 'Paytm', fee: 0.02, url: 'https://paytm.com/' },
-  { id: 'cash-on-delivery', label: 'Cash on Delivery', fee: 0, url: '/payment/cash-on-delivery' },
+  // { id: 'paypal', label: 'PayPal', fee: 0.034, url: 'https://www.paypal.com/checkoutnow' },
+  // { id: 'apple', label: 'Apple Pay', fee: 0.025, url: 'https://www.apple.com/apple-pay/' },
+  // { id: 'google', label: 'Google Pay', fee: 0.025, url: 'https://pay.google.com/' },
+  // { id: 'amazon', label: 'Amazon Pay', fee: 0.03, url: 'https://pay.amazon.com/' },
+  // { id: 'bank-transfer', label: 'Direct Bank Transfer', fee: 0.015, url: '/payment/bank-transfer' },
+  // { id: 'crypto', label: 'Cryptocurrency', fee: 0.02, url: 'https://commerce.coinbase.com/' },
+  // { id: 'mpesa', label: 'M-Pesa', fee: 0.025, url: 'https://www.safaricom.co.ke/personal/m-pesa' },
+  // { id: 'paytm', label: 'Paytm', fee: 0.02, url: 'https://paytm.com/' },
+  // { id: 'cash-on-delivery', label: 'Cash on Delivery', fee: 0, url: '/payment/cash-on-delivery' },
 ];
 
 const OrderSummary = () => {

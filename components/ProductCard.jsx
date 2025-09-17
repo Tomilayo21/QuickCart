@@ -202,7 +202,7 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* Cart Button */}
-          <button
+          {/* <button
             onClick={(e) => {
               e.stopPropagation();
               handleAddToCart();
@@ -220,7 +220,38 @@ const ProductCard = ({ product }) => {
             ) : (
               <ShoppingCart size={14} />
             )}
+          </button> */}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+
+              // ✅ Track event
+              fetch("/api/track", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: `/product/${product._id}`,
+                event: "button_click", }), 
+              });
+
+              // ✅ Handle actual cart logic
+              handleAddToCart();
+            }}
+            disabled={product.stock === 0}
+            className={`p-1.5 rounded-full shadow-md transition-colors flex items-center justify-center ${
+              product.stock === 0
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-orange-600 hover:bg-orange-700 text-white"
+            }`}
+            aria-label={product.stock === 0 ? "Sold Out" : "Add to Cart"}
+          >
+            {product.stock === 0 ? (
+              <span className="text-[10px] font-medium">Sold</span>
+            ) : (
+              <ShoppingCart size={14} />
+            )}
           </button>
+
         </div>
       </div>
     </div>

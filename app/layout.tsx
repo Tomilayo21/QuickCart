@@ -94,7 +94,7 @@ import connectDB from "@/config/db";
 import SettingsModel from "@/models/Settings";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import AnalyticsTracker from "@/components/admin/AnalyticsTracker";
-// import AnalyticsTracker from "@/components/AnalyticsTracker"; // 👈 import tracker
+
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["300", "400", "500"] });
 

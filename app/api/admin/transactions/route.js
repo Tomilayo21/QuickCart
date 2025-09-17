@@ -690,6 +690,7 @@ export async function GET(req) {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .populate("userId", "username email")
       .lean();
 
     return NextResponse.json(

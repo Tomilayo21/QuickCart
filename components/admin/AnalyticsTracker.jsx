@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AnalyticsTracker({ children }: { children: React.ReactNode }) {
+export default function AnalyticsTracker({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {

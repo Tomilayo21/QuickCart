@@ -16,6 +16,8 @@ import { useAppContext } from "@/context/AppContext";
 import MiniChart from "./settings/charts/MiniChart";
 import DashboardChart from "./settings/charts/DashboardChart";
 import { motion, AnimatePresence } from "framer-motion";
+import AnalyticsDashboard from "./AnalyticsDashboard";
+
 
 export default function AdminDashboard({
   setActiveView,
@@ -37,6 +39,7 @@ export default function AdminDashboard({
   const [thisMonthTransactionCount, setThisMonthTransactionCount] = useState(0);
   const [showIcons, setShowIcons] = useState(true);
   const [showChart, setShowChart] = useState(true);
+
 
   useEffect(() => {
     const fetchUserCount = async () => {
@@ -332,6 +335,22 @@ export default function AdminDashboard({
             )}
           </AnimatePresence>
         </div>
+
+
+        {/* <button
+          onClick={() =>
+            fetch("/api/track", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ path: "/checkout", event: "button_click" }),
+            })
+          }
+        >
+          Checkout
+        </button> */}
+
+        <AnalyticsDashboard />
+
       </main>
     </div>
 

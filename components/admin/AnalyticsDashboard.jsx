@@ -1,0 +1,260 @@
+"use client";
+import { useEffect, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { format, parseISO } from "date-fns";
+
+const FILTERS = [
+  { label: "Today", value: "1" },
+  { label: "Last 7 Days", value: "7" },
+  { label: "Last 30 Days", value: "30" },
+];
+
+export default function AnalyticsDashboard() {
+  const [stats, setStats] = useState({
+    totalVisitors: 0,
+    totalPageViews: 0,
+    totalClicks: 0,
+    topPages: [],
+    dailyViews: [],
+    dailyClicks: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState("7");
+  const [mode, setMode] = useState("comparison"); // "views" | "clicks" | "comparison"
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/analytics?range=${range}`);
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch analytics:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [range]);
+
+  // Merge dailyViews + dailyClicks into one array for combined chart
+  const combinedData = stats.dailyViews.map((v) => {
+    const clicksForDate =
+      stats.dailyClicks.find((c) => c.date === v.date)?.count || 0;
+    return {
+      date: v.date,
+      views: v.count,
+      clicks: clicksForDate,
+    };
+  });
+
+  return (
+    <div className="mt-10 space-y-8">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-2xl font-bold text-gray-800">Analytics Overview</h1>
+        <p className="text-gray-600">
+          Track visitors, page views, and engagement across your site.  
+          Use the filters below to explore trends over time.
+        </p>
+      </div>
+
+      {/* Time Filter */}
+      <div className="flex space-x-2">
+        {FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setRange(f.value)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              range === f.value
+                ? "bg-orange-500 text-white shadow"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats cards */}
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <p className="text-gray-500">Loading analytics...</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="bg-white shadow rounded-2xl p-6 border border-gray-100">
+              <h3 className="text-sm font-medium text-gray-500">Visitors</h3>
+              <p className="text-3xl font-bold text-orange-500 mt-2">
+                {stats.totalVisitors}
+              </p>
+            </div>
+
+            <div className="bg-white shadow rounded-2xl p-6 border border-gray-100">
+              <h3 className="text-sm font-medium text-gray-500">Page Views</h3>
+              <p className="text-3xl font-bold text-orange-500 mt-2">
+                {stats.totalPageViews}
+              </p>
+            </div>
+
+            <div className="bg-white shadow rounded-2xl p-6 border border-gray-100">
+              <h3 className="text-sm font-medium text-gray-500">Clicks</h3>
+              <p className="text-3xl font-bold text-orange-500 mt-2">
+                {stats.totalClicks}
+              </p>
+            </div>
+          </div>
+
+          {/* Combined Chart */}
+          <div className="bg-white shadow rounded-2xl p-4 sm:p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-700">
+                  Engagement Trend
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Views & clicks over the selected period.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <span className="px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-700">
+                  Total Views: {stats.totalPageViews}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                  Total Clicks: {stats.totalClicks}
+                </span>
+              </div>
+            </div>
+
+            {/* Toggle buttons */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setMode("views")}
+                className={`px-3 py-1 rounded text-sm ${
+                  mode === "views" ? "bg-orange-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                Views
+              </button>
+              <button
+                onClick={() => setMode("clicks")}
+                className={`px-3 py-1 rounded text-sm ${
+                  mode === "clicks" ? "bg-gray-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                Clicks
+              </button>
+              <button
+                onClick={() => setMode("comparison")}
+                className={`px-3 py-1 rounded text-sm ${
+                  mode === "comparison"
+                    ? "bg-gray-800 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                Comparison
+              </button>
+            </div>
+
+            <div className="w-full h-60 sm:h-72 md:h-80">
+              <ResponsiveContainer>
+                <LineChart
+                  data={combinedData}
+                  margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                    interval="preserveStartEnd"
+                    tickFormatter={(str) => {
+                        try {
+                        return format(parseISO(str), "MMM d"); // e.g. Sep 10
+                        } catch {
+                        return str;
+                        }
+                    }}
+                    />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fontSize: 10, fill: "#6b7280" }}
+                  />
+                  <Tooltip />
+                  <Legend />
+
+                  {(mode === "views" || mode === "comparison") && (
+                    <Line
+                      type="monotone"
+                      dataKey="views"
+                      stroke="#f97316"
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      activeDot={{ r: 4 }}
+                    />
+                  )}
+                  {(mode === "clicks" || mode === "comparison") && (
+                    <Line
+                      type="monotone"
+                      dataKey="clicks"
+                      stroke="#6b7280"
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      activeDot={{ r: 4 }}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Top Pages Viewed */}
+          <div className="bg-white shadow rounded-2xl p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">
+              Top Pages Viewed
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Most visited pages ranked by total views.
+            </p>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="py-2 text-sm font-medium text-gray-600">Page</th>
+                  <th className="py-2 text-sm font-medium text-gray-600">Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.topPages.length > 0 ? (
+                  stats.topPages.map((page, idx) => (
+                    <tr key={idx} className="border-b last:border-0">
+                      <td className="py-2 text-gray-800">{page._id}</td>
+                      <td className="py-2 font-semibold text-gray-700">
+                        {page.views}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="2" className="py-2 text-gray-500 italic">
+                      No data yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

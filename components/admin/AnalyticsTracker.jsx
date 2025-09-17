@@ -1,15 +1,19 @@
 "use client";
 
+import React, { useEffect, ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
-export default function AnalyticsTracker({ children }: { children: React.ReactNode }) {
+interface AnalyticsTrackerProps {
+  children: ReactNode;
+}
+
+const AnalyticsTracker: React.FC<AnalyticsTrackerProps> = ({ children }) => {
   const pathname = usePathname();
 
   useEffect(() => {
     if (!pathname) return;
 
-    // Send a page_view event whenever the route changes
+    // Log page view event whenever the route changes
     fetch("/api/analytics/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,4 +22,6 @@ export default function AnalyticsTracker({ children }: { children: React.ReactNo
   }, [pathname]);
 
   return <>{children}</>;
-}
+};
+
+export default AnalyticsTracker;

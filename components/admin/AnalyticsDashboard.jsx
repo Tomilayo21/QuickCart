@@ -219,40 +219,57 @@ export default function AnalyticsDashboard() {
           </div>
 
           {/* Top Pages Viewed */}
-          <div className="bg-white shadow rounded-2xl p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              Top Pages Viewed
+            <div className="bg-white shadow rounded-2xl p-6 border border-gray-100 w-full overflow-x-auto">
+            <h3 className="text-lg font-semibold text-gray-700 mb-1">
+                Top Pages Viewed
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              Most visited pages ranked by total views.
+                Most visited pages ranked by total views.
             </p>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-2 text-sm font-medium text-gray-600">Page</th>
-                  <th className="py-2 text-sm font-medium text-gray-600">Views</th>
+
+            <table className="w-full text-left border-collapse min-w-[300px]">
+                <thead>
+                <tr className="border-b border-gray-200">
+                    <th className="py-2 text-sm font-medium text-gray-600">Page</th>
+                    <th className="py-2 text-sm font-medium text-gray-600">Views</th>
                 </tr>
-              </thead>
-              <tbody>
+                </thead>
+                <tbody>
                 {stats.topPages.length > 0 ? (
-                  stats.topPages.map((page, idx) => (
-                    <tr key={idx} className="border-b last:border-0">
-                      <td className="py-2 text-gray-800">{page._id}</td>
-                      <td className="py-2 font-semibold text-gray-700">
-                        {page.views}
-                      </td>
-                    </tr>
-                  ))
+                    stats.topPages.map((page, idx) => {
+                    // Convert /something → Something
+                    const displayName =
+                        page._id === "/"
+                        ? "Home"
+                        : page._id
+                            .replace(/^\//, "")
+                            .split("-")
+                            .map((w) => w[0].toUpperCase() + w.slice(1))
+                            .join(" ");
+
+                    return (
+                        <tr
+                        key={idx}
+                        className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${
+                            idx % 2 === 0 ? "bg-gray-50/50" : "bg-white"
+                        }`}
+                        >
+                        <td className="py-2 text-gray-800">{displayName}</td>
+                        <td className="py-2 font-semibold text-gray-700">{page.views}</td>
+                        </tr>
+                    );
+                    })
                 ) : (
-                  <tr>
-                    <td colSpan="2" className="py-2 text-gray-500 italic">
-                      No data yet
+                    <tr>
+                    <td colSpan="2" className="py-2 text-gray-500 italic text-center">
+                        No data yet
                     </td>
-                  </tr>
+                    </tr>
                 )}
-              </tbody>
+                </tbody>
             </table>
-          </div>
+            </div>
+
         </>
       )}
     </div>

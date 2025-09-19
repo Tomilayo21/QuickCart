@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -11,51 +11,84 @@ import {
   CartesianGrid,
 } from "recharts";
 import moment from "moment";
+import { useAppContext } from "@/context/AppContext"; // 👈 import your context
 
 export default function DashboardChart({ dailyTrend = [], monthlyTrend = [] }) {
   const [view, setView] = useState("daily");
+  const { currency } = useAppContext(); 
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Format daily data with day names
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640); // sm breakpoint
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Format trends
   const formattedDaily = Array.isArray(dailyTrend)
     ? dailyTrend.map((entry) => ({
-        date: entry?._id ? moment(entry._id).format("ddd") : "N/A",
-        total: typeof entry?.total === "number" ? entry.total : 0,
+        date: entry.date,
+        total: typeof entry.total === "number" ? entry.total : 0,
       }))
     : [];
 
-  // Format monthly data with month names
+  // Ensure this week (Monday–Sunday)
+  const startOfWeek = moment().startOf("isoWeek"); // Monday
+  const endOfWeek = moment().endOf("isoWeek");     // Sunday
+  const thisWeekDays = [];
+
+  for (let d = startOfWeek.clone(); d.isSameOrBefore(endOfWeek); d.add(1, "day")) {
+    const found = formattedDaily.find((f) => moment(f.date).isSame(d, "day"));
+    thisWeekDays.push({
+      date: d.toISOString(),
+      total: found ? found.total : 0,
+    });
+  }
+
   const formattedMonthly = Array.isArray(monthlyTrend)
-    ? monthlyTrend.map((entry) => {
-        if (
-          entry?._id &&
-          typeof entry._id.year === "number" &&
-          typeof entry._id.month === "number"
-        ) {
-          return {
-            date: moment(`${entry._id.year}-${entry._id.month}-01`).format("MMM"),
-            total: typeof entry.total === "number" ? entry.total : 0,
-          };
-        } else {
-          return {
-            date: "N/A",
-            total: typeof entry?.total === "number" ? entry.total : 0,
-          };
-        }
-      })
+    ? monthlyTrend.map((entry) => ({
+        date: entry.date,
+        total: typeof entry.total === "number" ? entry.total : 0,
+      }))
     : [];
 
-  const data = view === "daily" ? formattedDaily : formattedMonthly;
+  // Pick data based on view
+  const data = view === "daily" ? thisWeekDays : formattedMonthly;
+
+
+  // Split past/today vs future
+  const today = moment().endOf("day");
+  const pastData = data.filter((d) => moment(d.date).isSameOrBefore(today));
+  const futureData = data.filter((d) => moment(d.date).isAfter(today));
+
+  // tick formatter
+  const formatTick = (isoDate) => {
+    if (!isoDate) return "";
+    return isMobile
+      ? moment(isoDate).format("ddd") // 👈 Mon, Tue, Wed
+      : view === "daily"
+      ? moment(isoDate).format("ddd, MMM D")
+      : moment(isoDate).format("MMM D");
+  };
+  
+  // tooltip label
+  const formatLabel = (isoDate) =>
+    view === "daily"
+      ? `Day: ${moment(isoDate).format("ddd, MMM D")}`
+      : `Day: ${moment(isoDate).format("MMM D")}`;
 
   return (
-    <div className="w-full bg-white p-6 rounded-2xl shadow-lg">
+    <div className="w-full bg-white p-4 sm:p-6 rounded-2xl shadow-lg">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-0">
           Deposit Trend —{" "}
           <span className="text-orange-600">
             {view === "daily" ? "This Week" : "This Month"}
           </span>
         </h2>
+
         <div className="flex space-x-2">
           <button
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
@@ -83,17 +116,21 @@ export default function DashboardChart({ dailyTrend = [], monthlyTrend = [] }) {
       {/* Chart */}
       <div className="h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart>
             <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
             <XAxis
               dataKey="date"
+              type="category"
+              allowDuplicatedCategory={false}
+              tickFormatter={formatTick}
               tick={{ fontSize: 12, fill: "#6B7280" }}
               axisLine={false}
               tickLine={false}
-            />
+              interval="preserveStartEnd"
+            />          
             <YAxis
               tickFormatter={(value) =>
-                `₦${Number(value).toLocaleString(undefined, {
+                `${currency}${Number(value).toLocaleString(undefined, {
                   minimumFractionDigits: 0,
                 })}`
               }
@@ -109,22 +146,40 @@ export default function DashboardChart({ dailyTrend = [], monthlyTrend = [] }) {
                 boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
               }}
               formatter={(value) =>
-                `₦${Number(value).toLocaleString(undefined, {
+                `${currency}${Number(value).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                 })}`
               }
-              labelFormatter={(label) =>
-                view === "daily" ? `Day: ${label}` : `Month: ${label}`
-              }
+              labelFormatter={(label) => formatLabel(label)}
             />
+
+            {/* Past/today line (solid) */}
             <Line
+              data={pastData}
               type="monotone"
               dataKey="total"
-              stroke="#EA580C"
+              stroke="#6B7280"
               strokeWidth={3}
-              dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#EA580C" }}
-              activeDot={{ r: 7, strokeWidth: 2, stroke: "#EA580C", fill: "#fff" }}
+              dot={{ r: 5, strokeWidth: 2, fill: "#fff", stroke: "#6B7280" }}
+              activeDot={{
+                r: 7,
+                strokeWidth: 2,
+                stroke: "#6B7280",
+                fill: "#fff",
+              }}
               animationDuration={800}
+            />
+
+            {/* Future line (dashed, lighter) */}
+            <Line
+              data={futureData}
+              type="monotone"
+              dataKey="total"
+              stroke="#9CA3AF"
+              strokeWidth={3}
+              strokeDasharray="6 6"
+              dot={false}
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>

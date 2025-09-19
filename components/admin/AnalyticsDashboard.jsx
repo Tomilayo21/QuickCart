@@ -47,14 +47,19 @@ export default function AnalyticsDashboard() {
     fetchStats();
   }, [range]);
 
-  // Merge dailyViews + dailyClicks into one array for combined chart
+  // Merge dailyViews + dailyClicks + dailyVisitors
   const combinedData = stats.dailyViews.map((v) => {
     const clicksForDate =
       stats.dailyClicks.find((c) => c.date === v.date)?.count || 0;
+    const visitorsForDate =
+      stats.dailyVisitors.find((u) => u.date === v.date)?.count || 0;
+
     return {
-      date: v.date,
+      date: v.date,    // keep ISO (yyyy-MM-dd)
+      label: v.label,  // keep pretty for X axis
       views: v.count,
       clicks: clicksForDate,
+      visitors: visitorsForDate,
     };
   });
 
@@ -156,16 +161,23 @@ export default function AnalyticsDashboard() {
                 Clicks
               </button>
               <button
+                onClick={() => setMode("visitors")}
+                className={`px-3 py-1 rounded text-sm ${
+                  mode === "visitors" ? "bg-blue-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                Visitors
+              </button>
+              <button
                 onClick={() => setMode("comparison")}
                 className={`px-3 py-1 rounded text-sm ${
-                  mode === "comparison"
-                    ? "bg-gray-800 text-white"
-                    : "bg-gray-200"
+                  mode === "comparison" ? "bg-gray-800 text-white" : "bg-gray-200"
                 }`}
               >
                 Comparison
               </button>
             </div>
+
 
             <div className="w-full h-60 sm:h-72 md:h-80">
               <ResponsiveContainer>
@@ -174,18 +186,30 @@ export default function AnalyticsDashboard() {
                   margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
+                  {/* <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: "#6b7280" }}
+                  interval="preserveStartEnd"
+                  tickFormatter={(str) => {
+                      try {
+                      return format(parseISO(str), "MMM d"); // e.g. Sep 10
+                      } catch {
+                      return str;
+                      }
+                  }}
+                  /> */}
                   <XAxis
                     dataKey="date"
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     interval="preserveStartEnd"
-                    tickFormatter={(str) => {
-                        try {
-                        return format(parseISO(str), "MMM d"); // e.g. Sep 10
-                        } catch {
-                        return str;
-                        }
+                    tickFormatter={(iso) => {
+                      const match = combinedData.find((d) => d.date === iso);
+                      return match?.label || iso;
                     }}
-                    />
+                  />
+
+
+
                   <YAxis
                     allowDecimals={false}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
@@ -213,6 +237,17 @@ export default function AnalyticsDashboard() {
                       activeDot={{ r: 4 }}
                     />
                   )}
+                  {(mode === "visitors" || mode === "comparison") && (
+                    <Line
+                      type="monotone"
+                      dataKey="visitors"
+                      stroke="#3b82f6" // blue for visitors
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
+                      activeDot={{ r: 4 }}
+                    />
+                  )}
+
                 </LineChart>
               </ResponsiveContainer>
             </div>

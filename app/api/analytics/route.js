@@ -1,5 +1,3 @@
-
-
 import { NextResponse } from "next/server";
 import connectDB from "@/config/db";
 import VisitorLog from "@/models/VisitorLog";
@@ -16,14 +14,29 @@ export async function GET(req) {
     const sinceDate = startOfDay(subDays(new Date(), range - 1));
     const untilDate = endOfDay(new Date());
 
-    // Totals
-    const totalPageViews = await VisitorLog.countDocuments({ event: "page_view" });
-    const totalVisitors = await VisitorLog.distinct("ip");
-    const totalClicks = await VisitorLog.countDocuments({ event: "button_click" });
+    // Totals WITHIN date range ✅
+    const totalPageViews = await VisitorLog.countDocuments({
+      event: "page_view",
+      createdAt: { $gte: sinceDate, $lte: untilDate },
+    });
+
+    const totalVisitors = await VisitorLog.distinct("ip", {
+      createdAt: { $gte: sinceDate, $lte: untilDate },
+    });
+
+    const totalClicks = await VisitorLog.countDocuments({
+      event: "button_click",
+      createdAt: { $gte: sinceDate, $lte: untilDate },
+    });
 
     // Top pages
     const topPages = await VisitorLog.aggregate([
-      { $match: { event: "page_view" } },
+      {
+        $match: {
+          event: "page_view",
+          createdAt: { $gte: sinceDate, $lte: untilDate },
+        },
+      },
       { $group: { _id: "$path", views: { $sum: 1 } } },
       { $sort: { views: -1 } },
       { $limit: 5 },
@@ -63,38 +76,73 @@ export async function GET(req) {
       { $sort: { _id: 1 } },
     ]);
 
-    // Fill missing days
-    const dailyViews = [];
-    const dailyClicks = [];
+    // Daily unique visitors
+  const rawDailyVisitors = await VisitorLog.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: sinceDate, $lte: untilDate },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          ip: "$ip",
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.date",
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-    for (let i = 0; i < range; i++) {
-      const d = subDays(untilDate, range - 1 - i);
-      const iso = format(d, "yyyy-MM-dd");
+  // Fill missing days
+  const dailyViews = [];
+  const dailyClicks = [];
+  const dailyVisitors = [];
 
-      const foundView = rawDailyViews.find((v) => v._id === iso);
-      const foundClick = rawDailyClicks.find((c) => c._id === iso);
+  for (let i = 0; i < range; i++) {
+    const d = subDays(untilDate, range - 1 - i);
+    const iso = format(d, "yyyy-MM-dd");
+    const label = format(d, "MMM d");
 
-      const label = format(d, "MMM d"); // e.g. Sep 16
+    const foundView = rawDailyViews.find((v) => v._id === iso);
+    const foundClick = rawDailyClicks.find((c) => c._id === iso);
+    const foundVisitor = rawDailyVisitors.find((v) => v._id === iso);
 
-      dailyViews.push({
-        date: label,
-        count: foundView ? foundView.count : 0,
-      });
-
-      dailyClicks.push({
-        date: label,
-        count: foundClick ? foundClick.count : 0,
-      });
-    }
-
-    return NextResponse.json({
-      totalPageViews,
-      totalVisitors: totalVisitors.length,
-      totalClicks,
-      dailyViews,
-      dailyClicks,
-      topPages,
+    dailyViews.push({
+      date: iso,
+      label,
+      count: foundView ? foundView.count : 0,
     });
+
+    dailyClicks.push({
+      date: iso,
+      label,
+      count: foundClick ? foundClick.count : 0,
+    });
+
+    dailyVisitors.push({
+      date: iso,
+      label,
+      count: foundVisitor ? foundVisitor.count : 0,
+    });
+  }
+
+  return NextResponse.json({
+    totalPageViews,
+    totalVisitors: totalVisitors.length,
+    totalClicks,
+    dailyViews,
+    dailyClicks,
+    dailyVisitors,   // ✅ new field
+    topPages,
+  });
+
   } catch (err) {
     console.error("Analytics error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

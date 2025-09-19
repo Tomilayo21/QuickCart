@@ -123,21 +123,26 @@ export default function AnalyticsDashboard() {
 
           {/* Combined Chart */}
           <div className="bg-white shadow rounded-2xl p-4 sm:p-6 border border-gray-100">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-gray-700">
                   Engagement Trend
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500">
-                  Views & clicks over the selected period.
+                  Views, Clicks & Visitors over the selected period.
                 </p>
               </div>
-              <div className="flex gap-2">
+
+              {/* Stats Pills */}
+              <div className="flex flex-wrap gap-2">
                 <span className="px-3 py-1 rounded-full text-xs bg-orange-100 text-orange-700">
                   Total Views: {stats.totalPageViews}
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                   Total Clicks: {stats.totalClicks}
+                </span>
+                <span className="px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                  Total Visitors: {stats.totalVisitors}
                 </span>
               </div>
             </div>
@@ -177,7 +182,6 @@ export default function AnalyticsDashboard() {
                 Comparison
               </button>
             </div>
-
 
             <div className="w-full h-60 sm:h-72 md:h-80">
               <ResponsiveContainer>

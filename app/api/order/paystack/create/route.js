@@ -20,9 +20,9 @@
 //     }
 
 //     const body = await req.json();
-//     let { items, address, paymentIntentId } = body;
+//     let { items, address, reference } = body; // 🔹 Paystack reference will be passed here
 
-//     // 🔹 Normalize items to array [{ product, quantity }]
+//     // 🔹 Normalize items
 //     let normalizedItems = [];
 //     if (Array.isArray(items)) {
 //       normalizedItems = items;
@@ -45,9 +45,9 @@
 //       );
 //     }
 
-//     // 🔹 Check for duplicate order if paymentIntentId exists
-//     if (paymentIntentId) {
-//       const existingOrder = await Order.findOne({ paymentIntentId });
+//     // 🔹 Check for duplicate order by Paystack reference
+//     if (reference) {
+//       const existingOrder = await Order.findOne({ referenceId: reference });
 //       if (existingOrder) {
 //         return NextResponse.json({
 //           success: true,
@@ -73,16 +73,16 @@
 //       await p.save();
 //     }
 
-//     // 🔹 Create order
+//     // 🔹 Create order with Paystack referenceId
 //     const order = await Order.create({
 //       userId,
 //       items: normalizedItems,
 //       address,
 //       amount: totalAmount,
-//       paymentMethod: "paystack",       // ✅ matches schema enum
-//       paymentStatus: "Pending",        // ✅ pending until webhook confirms
+//       paymentMethod: "paystack",
+//       paymentStatus: "Pending",       // ✅ will be updated by webhook
 //       orderStatus: "Pending",
-//       paymentIntentId: paymentIntentId || null,
+//       referenceId: reference || null, // 🔹 store Paystack transaction reference
 //       date: Date.now(),
 //     });
 
@@ -134,7 +134,6 @@
 
 
 
-
 // app/api/order/paystack/create/route.js
 import { NextResponse } from "next/server";
 import connectDB from "@/config/db";
@@ -147,19 +146,16 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    // ✅ Get logged-in user
+    // ✅ Auth
     const { userId } = getAuth(req);
     if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    let { items, address, reference } = body; // 🔹 Paystack reference will be passed here
+    let { items, address, reference } = body; // 🔹 Paystack reference
 
-    // 🔹 Normalize items
+    // ✅ Normalize items
     let normalizedItems = [];
     if (Array.isArray(items)) {
       normalizedItems = items;
@@ -169,20 +165,14 @@ export async function POST(req) {
         quantity,
       }));
     } else {
-      return NextResponse.json(
-        { success: false, message: "Invalid items format" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid items format" }, { status: 400 });
     }
 
     if (!address || normalizedItems.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Invalid order data" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid order data" }, { status: 400 });
     }
 
-    // 🔹 Check for duplicate order by Paystack reference
+    // ✅ Prevent duplicates by reference
     if (reference) {
       const existingOrder = await Order.findOne({ referenceId: reference });
       if (existingOrder) {
@@ -194,50 +184,49 @@ export async function POST(req) {
       }
     }
 
-    // 🔹 Calculate total and validate stock
+    // ✅ Build order items with price snapshots
     let totalAmount = 0;
+    const orderItems = [];
     for (const { product, quantity } of normalizedItems) {
       const p = await Product.findById(product);
       if (!p) throw new Error(`Product not found: ${product}`);
       if (p.stock < quantity) throw new Error(`Insufficient stock for ${p.name}`);
-      totalAmount += (p.offerPrice || p.price) * quantity;
-    }
 
-    // 🔹 Deduct stock
-    for (const { product, quantity } of normalizedItems) {
-      const p = await Product.findById(product);
+      const snapshotPrice = p.offerPrice || p.price;
+      totalAmount += snapshotPrice * quantity;
+
+      orderItems.push({
+        product,
+        quantity,
+        price: snapshotPrice, // 🔹 snapshot
+      });
+
+      // Deduct stock
       p.stock -= quantity;
       await p.save();
     }
 
-    // 🔹 Create order with Paystack referenceId
+    // ✅ Create order
     const order = await Order.create({
       userId,
-      items: normalizedItems,
+      items: orderItems,
       address,
       amount: totalAmount,
       paymentMethod: "paystack",
-      paymentStatus: "Pending",       // ✅ will be updated by webhook
-      orderStatus: "Pending",
-      referenceId: reference || null, // 🔹 store Paystack transaction reference
+      paymentStatus: "Successful",       // updated in webhook
+      orderStatus: "Order Placed",
+      referenceId: reference || null, // keep Paystack reference
       date: Date.now(),
     });
 
-    // 🔹 Clear user cart
+    // ✅ Clear user cart
     await User.findByIdAndUpdate(userId, { cartItems: {} });
 
-    console.log("[PAYSTACK_ORDER_CREATE] Order ID:", order._id);
+    console.log("[PAYSTACK_ORDER_CREATE] Order:", order._id);
 
-    return NextResponse.json({
-      success: true,
-      message: "Order created successfully",
-      order,
-    });
+    return NextResponse.json({ success: true, order });
   } catch (err) {
     console.error("[PAYSTACK_ORDER_CREATE_ERROR]", err);
-    return NextResponse.json(
-      { success: false, message: err.message || "Unexpected error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }

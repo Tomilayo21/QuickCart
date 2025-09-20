@@ -19,6 +19,26 @@ import MiniChart from "./settings/charts/MiniChart";
 import DashboardChart from "./settings/charts/DashboardChart";
 import { motion, AnimatePresence } from "framer-motion";
 import AnalyticsDashboard from "./AnalyticsDashboard";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+
+import axios from "axios";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "react-hot-toast";
+import { useUser } from "@clerk/nextjs";
+
 
 
 export default function AdminDashboard({
@@ -27,6 +47,7 @@ export default function AdminDashboard({
   setUserPanel,
   setOrderPanel,
 }) {
+  const { getToken } = useAuth();
   const [userCount, setUserCount] = useState(0);
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [thisMonthTotal, setThisMonthTotal] = useState(0);
@@ -40,29 +61,37 @@ export default function AdminDashboard({
   const [yesterdayTransactionCount, setYesterdayTransactionCount] = useState(0);
   const [thisMonthTransactionCount, setThisMonthTransactionCount] = useState(0);
   const [showIcons, setShowIcons] = useState(true);
-  const [showChart, setShowChart] = useState(true);
   const [todayDeposit, setTodayDeposit] = useState(0);
   const [yesterdayDeposit, setYesterdayDeposit] = useState(0);
   const [prevMonthTotal, setPrevMonthTotal] = useState(0);
   const [prevMonthCount, setPrevMonthCount] = useState(0);
-
-
-
+  const [topProducts, setTopProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const { user } = useUser();
+  const [allCustomers, setAllCustomers] = useState(0);  
+  const [newCustomers, setNewCustomers] = useState(0);  
+  
 
   useEffect(() => {
-    const fetchUserCount = async () => {
+    const fetchUserCounts = async () => {
       try {
-        const res = await fetch("/api/clerk-users");
+        const res = await fetch("/api/customers");
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setUserCount(data.length);
+
+        console.log("[/api/customers] response:", data);
+
+        if (data.success) {
+          setAllCustomers(data.allCustomers ?? 0);
+          setNewCustomers(data.newCustomers ?? 0);
+        } else {
+          console.error("Failed to fetch counts:", data.error);
         }
       } catch (err) {
-        console.error("Failed to fetch users", err);
+        console.error("Error fetching counts:", err);
       }
     };
 
-    fetchUserCount();
+    fetchUserCounts();
   }, []);
 
   useEffect(() => {
@@ -123,62 +152,64 @@ export default function AdminDashboard({
     fetchDepositStats();
   }, []);
 
-  const monthlyPercentage =
-    totalDeposit > 0
-      ? ((thisMonthTotal / totalDeposit) * 100).toFixed(1)
-      : "0.0";
+  const fetchAdminOrders = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get("/api/order/admin-orders?limit=5&page=1", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  const dailyPercentageOfMonth =
-    thisMonthTotal > 0
-      ? ((dailyTotal / thisMonthTotal) * 100).toFixed(1)
-      : "0.0";
-
-  const dailyChange =
-    yesterdayDeposit === 0
-      ? todayDeposit > 0
-        ? "100.0"
-        : "0.0"
-      : (((todayDeposit - yesterdayDeposit) / yesterdayDeposit) * 100).toFixed(1);
-
-  const dailyPercentageOfTotal =
-    totalDeposit > 0
-      ? ((dailyTotal / totalDeposit) * 100).toFixed(1)
-      : "0.0";
-
-
-  function calculateChangePercentage(monthlyStats, totalDeposit) {
-    if (!Array.isArray(monthlyStats) || monthlyStats.length === 0 || totalDeposit === 0) {
-      return "0.0%";
+      if (data.success) {
+        setOrders(data.orders || []);
+      } else {
+        toast.error(data.message || "Failed to fetch orders");
+      }
+    } catch (error) {
+      console.error("Fetch Orders Error:", error);
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Sort by actual date
-    const sorted = [...monthlyStats].sort(
-      (a, b) => new Date(b.date) - new Date(a.date)
-    );
+  useEffect(() => {
+    if (user) fetchAdminOrders();
+  }, [user]);
 
-    const current = sorted[0]?.total || 0;
+  useEffect(() => {
+    if (orders.length) {
+      orders.forEach((order, i) => {
+        console.log(`Order #${i + 1}`);
+        console.log("Full Name:", order.address?.fullName || "Missing");
+        console.log("Country:", order.address?.country || "Missing");
+        console.log("State:", order.address?.state || "Missing");
+        console.log("City:", order.address?.city || "Missing");
+        console.log("Phone Number:", order.address?.phoneNumber || "Missing");
+        console.log("----------------------------");
+      });
+    } if (orders.length === 0) {
+      console.log("No orders found or address is not populated.");
+    }
+  }, [orders]);
 
-    const percentage = (current / totalDeposit) * 100;
-    return `${percentage.toFixed(1)}%`;
-  }
+  const fetchTopProducts = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await axios.get("/api/admin/order/top-products", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) setTopProducts(data.topProducts);
+    } catch (err) {
+      console.error("Error fetching top products:", err);
+    }
+  };
 
+  useEffect(() => {
+    fetchTopProducts();
+  }, []);
+      
+  
 
-  const transactionChange =
-    yesterdayTransactionCount === 0
-      ? todayTransactionCount > 0
-        ? "100.0"
-        : "0.0"
-      : (
-          ((todayTransactionCount - yesterdayTransactionCount) /
-            yesterdayTransactionCount) *
-          100
-        ).toFixed(1);
-
-        
-  // const growthPercentage =
-  //   totalDeposit > 0
-  //     ? ((thisMonthTotal / totalDeposit) * 100).toFixed(1)
-  //     : "0.0";
   const projectGrowth =
     prevMonthTotal > 0
       ? (((thisMonthTotal - prevMonthTotal) / prevMonthTotal) * 100).toFixed(1)
@@ -186,157 +217,59 @@ export default function AdminDashboard({
       ? "100.0"
       : "0.0";
 
+  
+  const COLORS = ["#FFB020", "#1E90FF", "#4CAF50", "#FF6347", "#A0AEC0"];
+
   const stats = [
     {
-      title: "Total Users",
-      value: userCount.toString(),
-      change: "+100%",
-      icon: <Users className="w-6 h-6 text-gray-600" />,
-      onClick: () => {
-        setActiveTab("users");
-        setActiveView("settings");
-      },
-    },
-    {
-      title: "Active Subscribers",
-      value: subscriberCount.toString(),
-      change: `${((subscriberCount / userCount) * 100).toFixed(1)}%`,
-      icon: <UserCheck className="w-6 h-6  text-gray-600" />,
-      onClick: () => {
-        setActiveTab("users");
-        setUserPanel("subscribers");
-        setActiveView("settings");
-      },
-    },
-    {
-      title: "Total Deposit",
+      title: "Total Sales",
       value: `${currency}${totalDeposit.toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
-      change: "",
-      icon: <DollarSign className="w-6 h-6  text-gray-600" />,
+      icon: <DollarSign className="w-6 h-6 text-gray-600" />,
     },
     {
-      title: "This Month's Deposit",
-      value: `${currency}${thisMonthTotal.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      change: (
-        <span
-          className={`inline-flex items-center gap-1 font-medium ${
-            thisMonthTotal > prevMonthTotal
-              ? "text-green-600"
-              : thisMonthTotal < prevMonthTotal
-              ? "text-red-600"
-              : "text-gray-500"
-          }`}
-        >
-          {thisMonthTotal > prevMonthTotal && <ArrowUpRight className="w-4 h-4" />}
-          {thisMonthTotal < prevMonthTotal && (
-            <ArrowDownRight className="w-4 h-4" />
-          )}
-          {totalDeposit > 0
-            ? ((thisMonthTotal / totalDeposit) * 100).toFixed(1)
-            : "0.0"}
-          %
-        </span>
-      ),
-      icon: <FileBarChart className="w-6 h-6 text-gray-600" />,
-      onClick: () => {
-        setActiveTab("orders");
-        setOrderPanel("transactions");
-        setActiveView("settings");
-      },
-    },
-    {
-      title: "This Month's Transactions",
+      title: "Total Orders",
       value: thisMonthTransactionCount.toString(),
-      change: (
-        <span
-          className={`inline-flex items-center gap-1 font-medium ${
-            thisMonthTransactionCount > prevMonthCount
-              ? "text-green-600"
-              : thisMonthTransactionCount < prevMonthCount
-              ? "text-red-600"
-              : "text-gray-500"
-          }`}
-        >
-          {thisMonthTransactionCount > prevMonthCount && (
-            <ArrowUpRight className="w-4 h-4" />
-          )}
-          {thisMonthTransactionCount < prevMonthCount && (
-            <ArrowDownRight className="w-4 h-4" />
-          )}
-          {prevMonthCount > 0
-            ? (
-                ((thisMonthTransactionCount - prevMonthCount) / prevMonthCount) *
-                100
-              ).toFixed(1)
-            : "0.0"}
-          %
-        </span>
-      ),
       icon: <CreditCard className="w-6 h-6 text-gray-600" />,
     },
     {
-      title: "Daily Deposit",
-      value: `${currency}${todayDeposit.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      change: (
-        <span
-          className={`inline-flex items-center gap-1 font-medium ${
-            dailyChange > 0
-              ? "text-green-600"
-              : dailyChange < 0
-              ? "text-red-600"
-              : "text-gray-500"
-          }`}
-        >
-          {dailyChange > 0 && <ArrowUpRight className="w-4 h-4" />}
-          {dailyChange < 0 && <ArrowDownRight className="w-4 h-4" />}
-          {Math.abs(dailyChange).toFixed(1)}%
-        </span>
-      ),
-      icon: <TrendingUp className="w-6 h-6 text-grey-600" />,
-      chart: true,
-      onClick: () => {
-        setActiveTab("orders");
-        setOrderPanel("transactions");
-        setActiveView("settings");
-      },
+      title: "Total Customers",
+      value: allCustomers.toString(), // ✅ all-time
+      icon: <Users className="w-6 h-6 text-gray-600" />,
     },
-    // {
-    //   title: "Growth",
-    //   value: `${growthPercentage}%`,
-    //   change: "",
-    //   icon: <Rocket className="w-6 h-6  text-gray-600" />,
-    // },
-
     {
-      title: "Growth",
+      title: "New Customers",
+      value: newCustomers.toString(), // ✅ last 7 days
+      icon: <Users className="w-6 h-6 text-orange-600" />,
+    },
+    {
+      title: "Conversion",
+      value: `${(
+        (thisMonthTransactionCount / Math.max(userCount, 1)) *
+        100
+      ).toFixed(1)}%`,
+      icon: <TrendingUp className="w-6 h-6 text-gray-600" />,
+    },
+    {
+      title: "Avg. Order Value",
+      value:
+        thisMonthTransactionCount > 0
+          ? `${currency}${(thisMonthTotal / thisMonthTransactionCount).toFixed(2)}`
+          : `${currency}0.00`,
+      icon: <FileBarChart className="w-6 h-6 text-gray-600" />,
+    },
+    {
+      title: "Subscribers",
+      value: subscriberCount.toString(),
+      icon: <UserCheck className="w-6 h-6 text-gray-600" />,
+    },
+    {
+      title: "Monthly Growth %",
       value: `${projectGrowth}%`,
-      change: (
-        <span
-          className={`inline-flex items-center gap-1 font-medium ${
-            projectGrowth > 0
-              ? "text-green-600"
-              : projectGrowth < 0
-              ? "text-red-600"
-              : "text-gray-500"
-          }`}
-        >
-          {projectGrowth > 0 && <ArrowUpRight className="w-4 h-4" />}
-          {projectGrowth < 0 && <ArrowDownRight className="w-4 h-4" />}
-          {Math.abs(projectGrowth)}%
-        </span>
-      ),
       icon: <Rocket className="w-6 h-6 text-gray-600" />,
-    }
-
+    },
   ];
 
   return (
@@ -418,35 +351,157 @@ export default function AdminDashboard({
           ))}
         </div>
 
-        {/* Expandable Chart */}
-        <div className="mt-8 bg-white p-5 rounded-xl shadow-md border border-gray-100">
-          <button
-            onClick={() => setShowChart((prev) => !prev)}
-            className="inline-flex items-center gap-2 rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-orange-600 transition"
-          >
-            {showChart ? "Hide Chart" : "Show Chart"}
-          </button>
 
+        {/* === Top Products Section === */}
+        <div className="space-y-4 mt-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Top Products</h1>
+            <p className="text-gray-600 text-sm">
+              See which products generate the most revenue and sales.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow mb-8">
+            <div className="overflow-x-auto">
+              {topProducts.length > 0 ? (
+                <table className="w-full text-sm text-left text-gray-700">
+                  <thead className="text-gray-500 uppercase bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2">Product</th>
+                      <th className="px-4 py-2">Units Sold</th>
+                      <th className="px-4 py-2">Revenue</th>
+                      <th className="px-4 py-2">Stock Left</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topProducts.map((p, idx) => (
+                      <tr key={idx} className="border-t">
+                        <td className="px-4 py-2">{p.product}</td>
+                        <td className="px-4 py-2">{p.units}</td>
+                        <td className="px-4 py-2">
+                          {currency}
+                          {Number(p.revenue).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+                        <td className="px-4 py-2">{p.stock} left</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-500">No products found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* === Recent Orders Section === */}
+        <div className="space-y-4 mt-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Recent Orders</h1>
+            <p className="text-gray-600 text-sm">
+              Track your latest orders and payment statuses.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow mb-8">
+            <div className="overflow-x-auto">
+              {orders.length > 0 ? (
+                <table className="w-full text-sm text-left text-gray-700">
+                  <thead className="text-gray-500 uppercase bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2">Customer</th>
+                      <th className="px-4 py-2">Amount</th>
+                      <th className="px-4 py-2">Order Status</th>
+                      <th className="px-4 py-2">Payment Status</th>
+                      <th className="px-4 py-2">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders
+                      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                      .slice(0, 5)
+                      .map((order, idx) => (
+                        <tr key={order._id} className="border-t hover:bg-gray-50 transition">
+                          <td className="px-4 py-2">{order.address?.fullName || "N/A"}</td>
+                          <td className="px-4 py-2">
+                            {order.amount
+                              ? `$${order.amount.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}`
+                              : "N/A"}
+                          </td>
+                          <td
+                            className={`px-4 py-2 font-medium ${
+                              order.orderStatus === "Delivered"
+                                ? "text-green-600"
+                                : order.orderStatus === "Pending"
+                                ? "text-orange-500"
+                                : order.orderStatus === "Cancelled"
+                                ? "text-red-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {order.orderStatus || "N/A"}
+                          </td>
+                          <td
+                            className={`px-4 py-2 font-medium ${
+                              order.paymentStatus === "Paid"
+                                ? "text-green-600"
+                                : order.paymentStatus === "Pending"
+                                ? "text-orange-500"
+                                : order.paymentStatus === "Failed"
+                                ? "text-red-500"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {order.paymentStatus || "N/A"}
+                          </td>
+                          <td className="px-4 py-2">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-gray-500">No orders available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Expandable Chart */}
+        <div className="space-y-4 mt-8">
+          <h1 className="text-2xl font-bold text-gray-800">Sales Overview</h1>
+          <p className="text-gray-600">
+            Track total orders and revenue across different time ranges.
+          </p>
+        </div>
+
+        <div className="mt-8 bg-white p-5 rounded-xl shadow-md border border-gray-100">
           <AnimatePresence>
-            {showChart && (
-              <motion.div
-                key="chart"
-                initial={{ opacity: 0, y: -20, height: 0 }}
-                animate={{ opacity: 1, y: 0, height: "auto" }}
-                exit={{ opacity: 0, y: 20, height: 0 }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="mt-6">
-                  <DashboardChart
-                    dailyTrend={dailyTrendData}
-                    monthlyTrend={monthlyTrendData}
-                  />
-                </div>
-              </motion.div>
-            )}
+            <motion.div
+              key="chart"
+              initial={{ opacity: 0, y: -20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: 20, height: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="overflow-hidden mt-4"
+            >
+              <div className="">
+                <DashboardChart
+                  dailyTrend={dailyTrendData}
+                  monthlyTrend={monthlyTrendData}
+                />
+              </div>
+            </motion.div>
           </AnimatePresence>
         </div>
+                
 
         {/* Analytics Dashboard */}
         <AnalyticsDashboard />

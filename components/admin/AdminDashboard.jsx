@@ -353,125 +353,172 @@ export default function AdminDashboard({
 
 
         {/* === Top Products Section === */}
-        <div className="space-y-4 mt-8">
+        <div className="space-y-6 mt-8">
+          {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Top Products</h1>
-            <p className="text-gray-600 text-sm">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Top Products</h1>
+            <p className="text-gray-600 text-sm sm:text-base">
               See which products generate the most revenue and sales.
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow mb-8">
-            <div className="overflow-x-auto">
-              {topProducts.length > 0 ? (
-                <table className="w-full text-sm text-left text-gray-700">
-                  <thead className="text-gray-500 uppercase bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2">Product</th>
-                      <th className="px-4 py-2">Units Sold</th>
-                      <th className="px-4 py-2">Revenue</th>
-                      <th className="px-4 py-2">Stock Left</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topProducts.map((p, idx) => (
-                      <tr key={idx} className="border-t">
-                        <td className="px-4 py-2">{p.product}</td>
-                        <td className="px-4 py-2">{p.units}</td>
-                        <td className="px-4 py-2">
-                          {currency}
-                          {Number(p.revenue).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </td>
-                        <td className="px-4 py-2">{p.stock} left</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-500">No products found.</p>
-              )}
-            </div>
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {topProducts.length > 0 ? (
+              topProducts.map((p, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white p-4 sm:p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-100 flex flex-col justify-between"
+                >
+                  {/* Product Info */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
+                      {p.product}
+                    </h2>
+                    <span className="text-sm font-medium text-gray-500">{p.stock} left</span>
+                  </div>
+
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <p className="text-sm text-gray-500">Units Sold</p>
+                      <p className="text-lg font-bold text-gray-800">{p.units}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Revenue</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        {currency}
+                        {Number(p.revenue).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Optional: Progress Bar for Sales % */}
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{ width: `${Math.min((p.units / 100) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 col-span-full">No products found.</p>
+            )}
           </div>
         </div>
 
+
+
+
         {/* === Recent Orders Section === */}
-        <div className="space-y-4 mt-8">
+        <div className="space-y-6 mt-8">
+          {/* Header */}
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Recent Orders</h1>
-            <p className="text-gray-600 text-sm">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Recent Orders</h1>
+            <p className="text-gray-600 text-sm sm:text-base">
               Track your latest orders and payment statuses.
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow mb-8">
-            <div className="overflow-x-auto">
-              {orders.length > 0 ? (
-                <table className="w-full text-sm text-left text-gray-700">
-                  <thead className="text-gray-500 uppercase bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2">Customer</th>
-                      <th className="px-4 py-2">Amount</th>
-                      <th className="px-4 py-2">Order Status</th>
-                      <th className="px-4 py-2">Payment Status</th>
-                      <th className="px-4 py-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders
-                      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                      .slice(0, 5)
-                      .map((order, idx) => (
-                        <tr key={order._id} className="border-t hover:bg-gray-50 transition">
-                          <td className="px-4 py-2">{order.address?.fullName || "N/A"}</td>
-                          <td className="px-4 py-2">
-                            {order.amount
-                              ? `$${order.amount.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}`
-                              : "N/A"}
-                          </td>
-                          <td
-                            className={`px-4 py-2 font-medium ${
-                              order.orderStatus === "Delivered"
-                                ? "text-green-600"
-                                : order.orderStatus === "Pending"
-                                ? "text-orange-500"
-                                : order.orderStatus === "Cancelled"
-                                ? "text-red-500"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {order.orderStatus || "N/A"}
-                          </td>
-                          <td
-                            className={`px-4 py-2 font-medium ${
-                              order.paymentStatus === "Paid"
-                                ? "text-green-600"
-                                : order.paymentStatus === "Pending"
-                                ? "text-orange-500"
-                                : order.paymentStatus === "Failed"
-                                ? "text-red-500"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {order.paymentStatus || "N/A"}
-                          </td>
-                          <td className="px-4 py-2">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="text-gray-500">No orders available.</p>
-              )}
+          {/* Orders Grid for mobile, table for large screens */}
+          {orders.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+              {orders
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 5)
+                .map((order, idx) => (
+                  <div
+                    key={order._id}
+                    className="bg-white p-4 sm:p-5 rounded-xl shadow-md hover:shadow-lg transition-all border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 w-full">
+                      {/* Customer */}
+                      <div>
+                        <p className="text-sm text-gray-500">Customer</p>
+                        <p className="font-medium text-gray-800">
+                          {order.address?.fullName || "N/A"}
+                        </p>
+                      </div>
+
+                      {/* Amount */}
+                      <div>
+                        <p className="text-sm text-gray-500">Amount</p>
+                        <p className="font-medium text-gray-800">
+                          {order.amount
+                            ? `$${order.amount.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}`
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      {/* Order Status */}
+                      <div>
+                        <p className="text-sm text-gray-500">Order Status</p>
+                        <span
+                          className={`font-medium ${
+                            order.orderStatus === "Delivered"
+                              ? "text-green-600"
+                              : order.orderStatus === "Pending"
+                              ? "text-orange-500"
+                              : order.orderStatus === "Cancelled"
+                              ? "text-red-500"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {order.orderStatus || "N/A"}
+                        </span>
+                      </div>
+
+                      {/* Payment Status */}
+                      <div>
+                        <p className="text-sm text-gray-500">Payment Status</p>
+                        <span
+                          className={`font-medium ${
+                            order.paymentStatus === "Paid"
+                              ? "text-green-600"
+                              : order.paymentStatus === "Pending"
+                              ? "text-orange-500"
+                              : order.paymentStatus === "Failed"
+                              ? "text-red-500"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {order.paymentStatus || "N/A"}
+                        </span>
+                      </div>
+
+                      {/* Date */}
+                      <div>
+                        <p className="text-sm text-gray-500">Date</p>
+                        <p className="font-medium text-gray-800">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Optional: Arrow or icon for desktop */}
+                    <div className="hidden sm:block">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                ))}
             </div>
-          </div>
+          ) : (
+            <p className="text-gray-500">No orders available.</p>
+          )}
         </div>
 
         {/* Expandable Chart */}
